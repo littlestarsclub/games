@@ -1,0 +1,145 @@
+import { useEffect, useState } from 'react'
+import { speak } from '../utils/speak'
+import { playCorrect, playWrong } from '../utils/sounds'
+import { nextButton, emojiButton } from '../utils/gameStyles'
+
+const animals = [
+  { emoji: '🦁', en: 'LION', vi: 'SƯ TỬ' },
+  { emoji: '🐯', en: 'TIGER', vi: 'HỔ' },
+  { emoji: '🐵', en: 'MONKEY', vi: 'KHỈ' },
+  { emoji: '🐘', en: 'ELEPHANT', vi: 'VOI' },
+]
+
+export default function ZooMemoryGame({
+  onBack,
+  addStar,
+}: {
+  onBack: () => void
+  addStar: () => void
+}) {
+  const [cards, setCards] = useState<any[]>([])
+  const [flipped, setFlipped] = useState<number[]>([])
+  const [matched, setMatched] = useState<number[]>([])
+  const [score, setScore] = useState(0)
+  const [showCelebrate, setShowCelebrate] = useState(false)
+  const [streak, setStreak] =  useState(0)
+
+  useEffect(() => {
+    startGame()
+  }, [])
+
+  const startGame = () => {
+    const duplicated = [...animals, ...animals]
+    const shuffled = duplicated
+      .map(a => ({ ...a, id: Math.random() }))
+      .sort(() => Math.random() - 0.5)
+
+    setCards(shuffled)
+    setFlipped([])
+    setMatched([])
+  }
+
+  const handleFlip = (index: number) => {
+    if (flipped.length === 2 || flipped.includes(index) || matched.includes(index)) {
+      return
+    }
+
+    const newFlipped = [...flipped, index]
+    setFlipped(newFlipped)
+
+    if (newFlipped.length === 2) {
+      const [i1, i2] = newFlipped
+      const card1 = cards[i1]
+      const card2 = cards[i2]
+
+      if (card1.en === card2.en) {
+        playCorrect()
+		if (streak === 2) {speak('Amazing streak!')}
+	    if (streak === 4) {speak('Super learner!')}
+	    if (streak === 9) {speak('WOW! Superstar!')}
+        addStar()
+		setStreak((prev) => prev + 1)
+        setScore(prev => prev + 1)
+        setMatched(prev => [...prev, i1, i2])
+        setShowCelebrate(true)
+
+        speak(`Great job! ${card1.en}!`)
+        setTimeout(() => speak(card1.vi, 'vi-VN'), 600)
+
+        setTimeout(() => setShowCelebrate(false), 1200)
+      } else {
+        playWrong()
+		setStreak(0)
+        speak('Try again!')
+      }
+
+      setTimeout(() => setFlipped([]), 900)
+    }
+  }
+
+  return (
+    <>
+      <button onClick={onBack} style={nextButton}>⬅ Back</button>
+
+      <h2>🧠🐯 Zoo Memory Match</h2>
+
+      <h2 style={{ color: '#ff7b00', marginTop: 10 }}>
+        ⭐ Score: {score}
+      </h2>
+      <h3>🔥 Streak: {streak}</h3>
+		{streak >= 3 && (
+		<div
+			style={{
+			fontSize: 32,
+			marginBottom: 20,
+			color: '#ff4757',
+			animation:
+			'pop 0.5s ease',
+			}}
+		>
+		🔥 Amazing Streak!
+		</div>
+		)}
+      {showCelebrate && (
+        <div style={{ fontSize: 60, marginTop: 10 }}>
+          🎉🐾⭐
+        </div>
+      )}
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 80px)',
+          gap: 15,
+          justifyContent: 'center',
+          marginTop: 30,
+        }}
+      >
+        {cards.map((card, index) => {
+          const isFlipped = flipped.includes(index) || matched.includes(index)
+
+          return (
+            <button
+              key={card.id}
+              onClick={() => handleFlip(index)}
+              style={{
+                ...emojiButton,
+                width: 80,
+                height: 80,
+                fontSize: isFlipped ? 40 : 0,
+                background: isFlipped ? '#fff' : '#d0e7ff',
+                transition: '0.3s',
+              }}
+            >
+              {isFlipped ? card.emoji : '❓'}
+            </button>
+          )
+        })}
+      </div>
+
+      <button onClick={startGame} style={nextButton}>
+        🔄 Restart
+      </button>
+    </>
+  )
+}

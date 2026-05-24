@@ -1,0 +1,151 @@
+import { useEffect, useState } from 'react'
+import { speak } from '../utils/speak'
+import { playCorrect, playWrong } from '../utils/sounds'
+import { nextButton, speakButton, emojiButton } from '../utils/gameStyles'
+
+const animals = [
+  { emoji: '🐭', name: 'MOUSE', vietnamese: 'CHUỘT', size: 1 },
+  { emoji: '🐱', name: 'CAT', vietnamese: 'MÈO', size: 2 },
+  { emoji: '🐶', name: 'DOG', vietnamese: 'CHÓ', size: 3 },
+  { emoji: '🐷', name: 'PIG', vietnamese: 'HEO', size: 4 },
+  { emoji: '🐮', name: 'COW', vietnamese: 'BÒ', size: 5 },
+  { emoji: '🐘', name: 'ELEPHANT', vietnamese: 'VOI', size: 6 },
+]
+
+export default function BigOrSmallGame({
+  onBack,
+  addStar,
+}: {
+  onBack: () => void
+  addStar: () => void
+}) {
+  const [a, setA] = useState(animals[0])
+  const [b, setB] = useState(animals[1])
+  const [questionType, setQuestionType] = useState<'bigger' | 'smaller'>('bigger')
+  const [score, setScore] = useState(0)
+  const [showCelebrate, setShowCelebrate] = useState(false)
+  const [streak, setStreak] =  useState(0)
+
+  useEffect(() => {
+    nextRound()
+  }, [])
+
+  const nextRound = () => {
+    let first = animals[Math.floor(Math.random() * animals.length)]
+    let second = animals[Math.floor(Math.random() * animals.length)]
+
+    while (second.name === first.name) {
+      second = animals[Math.floor(Math.random() * animals.length)]
+    }
+
+    setA(first)
+    setB(second)
+
+    const type = Math.random() > 0.5 ? 'bigger' : 'smaller'
+    setQuestionType(type)
+  }
+
+  const speakQuestion = async () => {
+    if (questionType === 'bigger') {
+      await speak('Which animal is bigger?')
+      await speak('Con vật nào lớn hơn?', 'vi-VN')
+    } else {
+      await speak('Which animal is smaller?')
+      await speak('Con vật nào nhỏ hơn?', 'vi-VN')
+    }
+  }
+
+  const praises = ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!']
+  const randomPraise = () => praises[Math.floor(Math.random() * praises.length)]
+
+  const handleClick = (choice: typeof animals[0]) => {
+    const correct =
+      questionType === 'bigger'
+        ? choice.size === Math.max(a.size, b.size)
+        : choice.size === Math.min(a.size, b.size)
+
+    if (correct) {
+      playCorrect()
+	  if (streak === 2) {speak('Amazing streak!')}
+	  if (streak === 4) {speak('Super learner!')}
+	  if (streak === 9) {speak('WOW! Superstar!')}
+      addStar()
+	  setStreak((prev) => prev + 1)
+      setScore((prev) => prev + 1)
+      setShowCelebrate(true)
+
+      speak(`${randomPraise()} ${choice.name}!`)
+      setTimeout(() => speak(choice.vietnamese, 'vi-VN'), 800)
+
+      setTimeout(() => {
+        setShowCelebrate(false)
+        nextRound()
+      }, 1800)
+    } else {
+      playWrong()
+	  setStreak(0)
+      speak('Try again!')
+    }
+  }
+
+  return (
+    <>
+      <button onClick={onBack} style={nextButton}>⬅ Back</button>
+
+      <h2>🐘 Big or Small?</h2>
+
+      <h2 style={{ color: '#ff7b00', marginTop: 10 }}>
+        ⭐ Score: {score}
+      </h2>
+      <h3>🔥 Streak: {streak}</h3>
+		{streak >= 3 && (
+		<div
+			style={{
+			fontSize: 32,
+			marginBottom: 20,
+			color: '#ff4757',
+			animation:
+			'pop 0.5s ease',
+			}}
+		>
+		🔥 Amazing Streak!
+		</div>
+		)}
+      {showCelebrate && (
+        <div style={{ fontSize: 60, marginTop: 20, animation: 'pop 0.6s ease' }}>
+          🎉 ⭐ 🌟
+        </div>
+      )}
+
+      <p style={{ fontSize: 22, marginTop: 20 }}>
+        {questionType === 'bigger' ? 'Which animal is bigger?' : 'Which animal is smaller?'}
+      </p>
+
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: 40,
+          marginTop: 30,
+          flexWrap: 'wrap',
+        }}
+      >
+        <button style={emojiButton} onClick={() => handleClick(a)}>
+          {a.emoji}
+        </button>
+
+        <button style={emojiButton} onClick={() => handleClick(b)}>
+          {b.emoji}
+        </button>
+      </div>
+
+      <button onClick={speakQuestion} style={speakButton}>
+        🔊 Hear Question
+      </button>
+
+      <button onClick={nextRound} style={nextButton}>
+        ➡️ Next
+      </button>
+    </>
+  )
+}
