@@ -1,2 +1,2 @@
-# little-stars-games
+# Little stars Club - games
 Interactive preschool mini games for learning English and Vietnamese through play.
