@@ -80,7 +80,7 @@ export default function App() {
     })
 
   const musicRef = useRef(
-    new Audio('/music/happy.mp3')
+    new Audio('music/happy.mp3')
   )
 
   useEffect(() => {
