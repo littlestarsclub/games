@@ -1,8 +1,20 @@
 import { useEffect, useState } from 'react'
+import { speak } from '../utils/speak'
+import { playCorrect, playWrong,} from '../utils/sounds'
+import { emojiButton, nextButton, speakButton, } from '../utils/gameStyles'
 
-export default function CountGame() {
+export default function CountGame({
+  onBack,
+  addStar,
+}: {
+  onBack: () => void
+  addStar: () => void
+}) {
   const [count, setCount] = useState(3)
-
+  const [score, setScore] = useState(0)
+  const [showCelebrate, setShowCelebrate] = useState(false)
+  const [streak, setStreak] =  useState(0)
+  
   useEffect(() => {
     nextRound()
   }, [])
@@ -16,52 +28,101 @@ export default function CountGame() {
 
   const stars = Array(count).fill('⭐')
 
-  const speak = (text: string, lang = 'en-US') => {
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = lang
-    utterance.rate = 0.9
-    speechSynthesis.speak(utterance)
-  }
+const praises = [
+  'Amazing!',
+  'Wonderful!',
+  'Great job!',
+  'Awesome!',
+  'Yay!',
+]
 
-  const playCorrect = () => {
-    new Audio(
-      'https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg'
-    ).play()
-  }
+const randomPraise = () => {
+  return praises[
+    Math.floor(Math.random() * praises.length)
+  ]
+}
+  const praisesVN = ['Tuyệt vời!', 'Giỏi lắm!', 'Xuất sắc!', 'Hay quá!', 'Yeah!']
+  const randomPraiseVN = () => praisesVN[Math.floor(Math.random() * praisesVN.length)]
 
-  const playWrong = () => {
-    new Audio(
-      'https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg'
-    ).play()
-  }
-
-  const handleClick = (num: number) => {
+  const handleClick = async(num: number) => {
     if (num === count) {
       playCorrect()
+	  if (streak === 2) {speak('Amazing streak!')}
+	  if (streak === 4) {speak('Super learner!')}
+	  if (streak === 9) {speak('WOW! Superstar!')}
+	  addStar()
+	  setStreak((prev) => prev + 1)
+	  setScore((prev) => prev + 1)
+	  setShowCelebrate(true)
+	  
+	  // Speak English praise
+      await speak(`${randomPraise()} ${num}!`)
 
-      speak(`Great job! ${count}!`)
-
+      // Speak Vietnamese praise
+      await speak(`${randomPraiseVN()} ${num}!`, 'vi-VN')
+	 
       setTimeout(() => {
-        nextRound()
-      }, 2000)
+  setShowCelebrate(false)
+
+  nextRound()
+}, 2000)
     } else {
       playWrong()
-      speak('Try again!')
+	  setStreak(0)
+      await speak('Try again!')
+      await speak('Thử lại nhé!', 'vi-VN')
     }
   }
 
-  const speakQuestion = () => {
-    speak('How many stars do you see?')
-
-    setTimeout(() => {
-      speak('Có bao nhiêu ngôi sao?', 'vi-VN')
-    }, 1000)
+  const speakQuestion = async() => {
+    await speak('How many stars do you see?')
+	await speak('Có bao nhiêu ngôi sao?', 'vi-VN')
   }
 
   return (
     <>
+	<button
+        onClick={onBack}
+        style={nextButton}
+      >
+        ⬅ Back
+      </button>
       <h2>⭐ Count the Stars!</h2>
-
+<h2
+  style={{
+    color: '#ff7b00',
+    marginTop: 10,
+  }}
+>
+  ⭐ Score: {score}
+</h2>
+<h3>
+  🔥 Streak: {streak}
+</h3>
+{streak >= 3 && (
+  <div
+    style={{
+      fontSize: 32,
+      marginBottom: 20,
+      color: '#ff4757',
+      animation:
+        'pop 0.5s ease',
+    }}
+  >
+    🔥 Amazing Streak!
+  </div>
+)}
+{showCelebrate && (
+  <div
+    style={{
+      fontSize: 60,
+      marginTop: 20,
+	   animation: 'pop 0.6s ease',
+    }}
+  >
+    🎉 ⭐ 🌟
+  </div>
+)}
       <p>How many stars do you see?</p>
 
       <div
@@ -73,13 +134,12 @@ export default function CountGame() {
       >
         {stars.join(' ')}
       </div>
-
-      <div
+	  <div
         style={{
-          display: 'flex',
-          justifyContent: 'center',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
           gap: 20,
-          flexWrap: 'wrap',
+          marginTop: 30,
         }}
       >
         {[1, 2, 3, 4, 5].map((num) => (
@@ -119,25 +179,3 @@ const numberButton = {
   background: '#d9f4ff',
 }
 
-const speakButton = {
-  marginTop: 35,
-  marginRight: 12,
-  background: '#ff9f1c',
-  border: 'none',
-  color: 'white',
-  padding: '16px 28px',
-  borderRadius: 18,
-  fontSize: 22,
-  cursor: 'pointer',
-}
-
-const nextButton = {
-  marginTop: 35,
-  background: '#00b894',
-  border: 'none',
-  color: 'white',
-  padding: '16px 28px',
-  borderRadius: 18,
-  fontSize: 22,
-  cursor: 'pointer',
-}

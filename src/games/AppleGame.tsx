@@ -1,4 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react' 
+import { speak } from '../utils/speak'
+import { playCorrect, playWrong,} from '../utils/sounds'
+import { emojiButton, nextButton, speakButton, } from '../utils/gameStyles'
+
 
 const items = [
   { emoji: '🍎', name: 'APPLE', vietnamese: 'TÁO' },
@@ -6,9 +10,18 @@ const items = [
   { emoji: '🚌', name: 'BUS', vietnamese: 'XE BUÝT' },
 ]
 
-export default function AppleGame() {
+export default function AppleGame({
+  onBack,
+  addStar,
+}: {
+  onBack: () => void
+  addStar: () => void
+}) {
   const [target, setTarget] = useState(items[0])
-
+  const [score, setScore] = useState(0)
+  const [showCelebrate, setShowCelebrate] = useState(false)
+  const [streak, setStreak] =  useState(0)
+  
   useEffect(() => {
     nextRound()
   }, [])
@@ -20,56 +33,105 @@ export default function AppleGame() {
     setTarget(randomItem)
   }
 
-  const speak = (text: string, lang = 'en-US') => {
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = lang
-    utterance.rate = 0.9
-    speechSynthesis.speak(utterance)
-  }
+	const speakQuestion = async () => {
+		await speak(`Can you find ${target.name}?`)
+		await speak(target.vietnamese, 'vi-VN')
+	}
 
-  const playCorrect = () => {
-    new Audio(
-      'https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg'
-    ).play()
-  }
+const praises = [
+  'Amazing!',
+  'Wonderful!',
+  'Great job!',
+  'Awesome!',
+  'Yay!',
+]
 
-  const playWrong = () => {
-    new Audio(
-      'https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg'
-    ).play()
-  }
-
-  const speakQuestion = () => {
-    speak(`Can you find ${target.name}?`)
-
-    setTimeout(() => {
-      speak(target.vietnamese, 'vi-VN')
-    }, 1000)
-  }
-
+const randomPraise = () => {
+  return praises[
+    Math.floor(Math.random() * praises.length)
+  ]
+}
   const handleClick = (item: typeof items[0]) => {
     if (item.name === target.name) {
       playCorrect()
+	  if (streak === 2) {
+  speak('Amazing streak!')
+}
 
-      speak(`Great job! ${item.name}!`)
+if (streak === 4) {
+  speak('Super learner!')
+}
+
+if (streak === 9) {
+  speak('WOW! Superstar!')
+}
+	  addStar()
+	  setStreak((prev) => prev + 1)
+	  setScore((prev) => prev + 1)
+	  setShowCelebrate(true)
+      speak(`${randomPraise()} ${item.name}!`)
 
       setTimeout(() => {
         speak(item.vietnamese, 'vi-VN')
       }, 1000)
 
-      setTimeout(() => {
-        nextRound()
-      }, 2000)
+    setTimeout(() => {
+  setShowCelebrate(false)
+
+  nextRound()
+}, 2000)
     } else {
       playWrong()
+	  setStreak(0)
       speak('Try again!')
     }
   }
 
   return (
     <>
-      <h2>🍎 Find the Item!</h2>
+	 <button
+        onClick={onBack}
+        style={nextButton}
+      >
+        ⬅ Back
+      </button>
 
+      <h2>🍎 Find the Item!</h2>
+<h2
+  style={{
+    color: '#ff7b00',
+    marginTop: 10,
+  }}
+>
+  ⭐ Score: {score}
+</h2>
+<h3>
+  🔥 Streak: {streak}
+</h3>
+{streak >= 3 && (
+  <div
+    style={{
+      fontSize: 32,
+      marginBottom: 20,
+      color: '#ff4757',
+      animation:
+        'pop 0.5s ease',
+    }}
+  >
+    🔥 Amazing Streak!
+  </div>
+)}
+{showCelebrate && (
+  <div
+    style={{
+      fontSize: 60,
+      marginTop: 20,
+	  animation: 'pop 0.6s ease',
+    }}
+  >
+    🎉 ⭐ 🌟
+  </div>
+)}
       <p>Can you find {target.name}?</p>
       <p>{target.vietnamese}</p>
 
@@ -104,7 +166,7 @@ export default function AppleGame() {
         style={nextButton}
       >
         ➡️ Next Question
-      </button>
+	  </button>
     </>
   )
 }
@@ -118,25 +180,3 @@ const gameButton = {
   background: '#fff9d9',
 }
 
-const speakButton = {
-  marginTop: 35,
-  marginRight: 12,
-  background: '#ff9f1c',
-  border: 'none',
-  color: 'white',
-  padding: '16px 28px',
-  borderRadius: 18,
-  fontSize: 22,
-  cursor: 'pointer',
-}
-
-const nextButton = {
-  marginTop: 35,
-  background: '#00b894',
-  border: 'none',
-  color: 'white',
-  padding: '16px 28px',
-  borderRadius: 18,
-  fontSize: 22,
-  cursor: 'pointer',
-}
