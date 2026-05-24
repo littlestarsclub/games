@@ -69,12 +69,14 @@ export default function UpDownGame({
     useState(false)
 
   useEffect(() => {
-  const speakLines = async () => {
+  const speakLineEn = async () => {
     await speak('Is it up or down?')
+  }
+ const speakLineVi = async () => {
     await speak('Là lên hay xuống?', 'vi-VN')
   }
-
-  speakLines()
+  speakLineEn()
+  speakLineVi()
 }, [item])
 
 
@@ -142,7 +144,7 @@ export default function UpDownGame({
     <div>
 	<button onClick={onBack} style={nextButton}>⬅ Back</button>
       <h2>
-        ⬆️⬇️ Up or Down
+        ⬆️⬇️ Up or Down - Lên hay Xuống
       </h2>
 
       <h3

@@ -77,7 +77,7 @@ export default function CrabCountGame({
     <>
       <button onClick={onBack} style={nextButton}>⬅ Back</button>
 
-      <h2>🦀 Crab Count</h2>
+      <h2>🦀 Crab Count - Đếm cua</h2>
 
       <h2 style={{ color: '#0099ff', marginTop: 10 }}>
         ⭐ Score: {score}

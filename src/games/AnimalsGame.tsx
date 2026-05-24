@@ -70,7 +70,7 @@ export default function AnimalsGame({
   const praisesVN = ['Làm tốt lắm!', 'Tuyệt vời!', 'Thật tuyệt diệu!', 'Đỉnh quá!', 'Hoan hô!']
   const randomPraiseVN = () => praisesVN[Math.floor(Math.random() * praisesVN.length)]
 
-  const handleClick = (choice: typeof animals[0]) => {
+  const handleClick = async(choice: typeof animals[0]) => {
     const correct =
       direction === 'enToVi'
         ? choice.vi === target.vi
@@ -99,7 +99,8 @@ export default function AnimalsGame({
     } else {
       playWrong()
 	  setStreak(0)
-      speak('Try again!')
+      await speak('Try again!')
+	  await speak('Thử lại nhé!', 'vi-VN')
     }
   }
 
@@ -107,7 +108,7 @@ export default function AnimalsGame({
     <>
       <button onClick={onBack} style={nextButton}>⬅ Back</button>
 
-      <h2>🐾 Animals Game</h2>
+      <h2>🐶 Animals Game - Trò chơi Động vật</h2>
 
       <h2 style={{ color: '#ff7b00', marginTop: 10 }}>
         ⭐ Score: {score}

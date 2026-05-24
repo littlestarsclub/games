@@ -333,35 +333,40 @@ export default function App() {
   const worlds = [
     {
       emoji: '🏫',
-      title: 'Classroom',
+	  key: 'Classroom',
+      title: 'Classroom - Lớp học',
       text: 'Learning Games',
       stars: 0,
     },
 
     {
       emoji: '🌳',
-      title: 'Playground',
+	  key: 'Playground',
+      title: 'Playground - Sân chơi',
       text: 'Action Games',
       stars: 10,
     },
 
     {
       emoji: '🦁',
-      title: 'Zoo',
+	  key: 'Zoo',
+      title: 'Zoo - Sở thú',
       text: 'Animal Games',
       stars: 25,
     },
 
     {
       emoji: '🚀',
-      title: 'Space Room',
+	  key: 'Space Room',
+      title: 'Space Room - Phòng Vũ trụ',
       text: 'Math Games',
       stars: 50,
     },
 
     {
       emoji: '🌊',
-      title: 'Ocean World',
+	  key: 'Ocean World',
+      title: 'Ocean World - Thế giới biển',
       text: 'Sea Animals',
       stars: 75,
     },
@@ -523,7 +528,7 @@ export default function App() {
         marginBottom: 20,
       }}
     >
-      <h3>🎁 Daily Reward</h3>
+      <h3>🎁 Daily Reward - Phần thưởng hàng ngày</h3>
 
       <button
         onClick={claimDailyReward}
@@ -550,7 +555,7 @@ export default function App() {
         marginBottom: 20,
       }}
     >
-      <h3>🐶 Buddy</h3>
+      <h3>🐶 Buddy - Bạn</h3>
 
       <div style={{ fontSize: 60 }}>{pet.emoji}</div>
       <p>{pet.text}</p>
@@ -565,7 +570,7 @@ export default function App() {
         marginBottom: 20,
       }}
     >
-      <h3>🌞 Challenge</h3>
+      <h3>🌞 Challenge - Thử thách</h3>
 
       <p style={{ fontSize: 20, fontWeight: 'bold' }}>
         {dailyChallenge}
@@ -581,7 +586,7 @@ export default function App() {
         marginBottom: 20,
       }}
     >
-      <h3>🎨 Themes</h3>
+      <h3>🎨 Themes - Chủ đề nền</h3>
 
       <div
         style={{
@@ -606,7 +611,7 @@ export default function App() {
 
     {/* PLAYER SELECTOR */}
     <div style={{ marginTop: 30 }}>
-      <h3>👧 Choose Player</h3>
+      <h3>👧 Choose Player - Chọn người chơi</h3>
 
       <div
         style={{
@@ -777,7 +782,7 @@ export default function App() {
             }}
           >
             Learn English & Vietnamese
-            the fun way!
+            the fun way! 
           </p>
           {/* WORLD MAP */}
           {gameMode === 'home' && (
@@ -788,7 +793,7 @@ export default function App() {
                   color: '#ff7b00',
                 }}
               >
-                🏡 Explore Worlds
+                🏡 Explore Worlds <br/>Khám phá các thế giới
               </h2>
 
               <div
@@ -809,14 +814,14 @@ export default function App() {
                     return (
                       <button
                         key={
-                          world.title
+                          world.key
                         }
                         onClick={() => {
                           if (
                             unlocked
                           ) {
                             setSelectedWorld(
-                              world.title
+                              world.key
                             )
                           }
                         }}
@@ -913,7 +918,7 @@ export default function App() {
                 'Classroom' && (
                 <>
                   <h2>
-                    🏫 Classroom
+                    🏫 Classroom - Lớp học
                   </h2>
 
                   <div
@@ -927,7 +932,7 @@ export default function App() {
                     <GameCard
                       emoji="🍎"
                       title="Apple Game"
-                      description="Find fruits!"
+                      description="Find fruits! Tìm trái cây!"
                       onClick={() =>
                         setGameMode(
                           'apple'
@@ -938,7 +943,7 @@ export default function App() {
                     <GameCard
                       emoji="🎨"
                       title="Color Game"
-                      description="Learn colors!"
+                      description="Learn colors! Học về màu sắc!"
                       onClick={() =>
                         setGameMode(
                           'color'
@@ -949,7 +954,7 @@ export default function App() {
                     <GameCard
                       emoji="🔺"
                       title="Shape Game"
-                      description="Learn shapes!"
+                      description="Learn shapes! Học về các hình khối!"
                       onClick={() =>
                         setGameMode(
                           'shape'
@@ -959,7 +964,7 @@ export default function App() {
 					<GameCard
                       emoji="🔤"
                       title="Word Game"
-                      description="Match English/Vietnamese words!"
+                      description="Match words! Ghép từ"
                       onClick={() =>
                         setGameMode(
                           'MatchWordGame'
@@ -975,7 +980,7 @@ export default function App() {
                 'Playground' && (
                 <>
                   <h2>
-                    🌳 Playground
+                    🌳 Playground - Sân chơi
                   </h2>
 
                   <div
@@ -989,7 +994,7 @@ export default function App() {
                     <GameCard
                       emoji="⬆️⬇️"
                       title="Up Down Game"
-                      description="Find things that go up or down!"
+                      description="Learn directions! Học các hướng!"
                       onClick={() =>
                         setGameMode(
                           'UpDownGame'
@@ -999,7 +1004,7 @@ export default function App() {
 					 <GameCard
                       emoji="🔥"
                       title="Hot Cold Game"
-                      description="Find hot cold items!"
+                      description="Learn hot and cold! Học về nóng và lạnh!"
                       onClick={() =>
                         setGameMode(
                           'HotColdGame'
@@ -1009,7 +1014,7 @@ export default function App() {
 					 <GameCard
                       emoji="⚡"
                       title="Fast Slow Game"
-                      description="Find fast or slow movements!"
+                      description="Learn fast and slow! Học về nhanh và chậm!"
                       onClick={() =>
                         setGameMode(
                           'FastSlowGame'
@@ -1019,7 +1024,7 @@ export default function App() {
 					 <GameCard
                       emoji="🏃"
                       title="Run Walk Game"
-                      description="Find walk and run actions!"
+                      description="Learn running and walking!Học về chạy và đi bộ!"
                       onClick={() =>
                         setGameMode(
                           'RunWalkGame'
@@ -1035,7 +1040,7 @@ export default function App() {
               {selectedWorld ===
                 'Zoo' && (
                 <>
-                  <h2>🦁 Zoo</h2>
+                  <h2>🦁 Zoo - Sở thú</h2>
 
                   <div
                     style={{
@@ -1048,7 +1053,7 @@ export default function App() {
                     <GameCard
                       emoji="🐶"
                       title="Animal Game"
-                      description="Match words-animals!"
+                      description="Learn animal names! Học tên động vật!"
                       onClick={() =>
                         setGameMode(
                           'AnimalsGame'
@@ -1059,7 +1064,7 @@ export default function App() {
                     <GameCard
                       emoji="🐾"
                       title="Animal Sounds"
-                      description="Hear sounds!"
+                      description="Hear sounds! Học nghe âm thanh!"
                       onClick={() =>
                         setGameMode(
                           'animalSound'
@@ -1070,7 +1075,7 @@ export default function App() {
                     <GameCard
                       emoji="🧠"
                       title="Memory Game"
-                      description="Match cards!"
+                      description="Match cards! Ghép thẻ!"
                       onClick={() =>
                         setGameMode(
                           'memory'
@@ -1079,8 +1084,8 @@ export default function App() {
                     />
 					<GameCard
                       emoji="🐘"
-                      title="Big & Small Game"
-                      description="Find big and small animals!"
+                      title="Big Small Game"
+                      description="Learn big and small! Học về lớn và nhỏ!"
                       onClick={() =>
                         setGameMode(
                           'BigOrSmallGame'
@@ -1096,7 +1101,7 @@ export default function App() {
                 'Space Room' && (
                 <>
                   <h2>
-                    🚀 Space Room
+                    🚀 Space Room - Phòng Vũ trụ
                   </h2>
 
                   <div
@@ -1110,7 +1115,7 @@ export default function App() {
                     <GameCard
                       emoji="⭐"
                       title="Count Game"
-                      description="Count stars!"
+                      description="Practice counting skills! Luyện học đếm!"
                       onClick={() =>
                         setGameMode(
                           'count'
@@ -1119,8 +1124,8 @@ export default function App() {
                     />
 					 <GameCard
                       emoji="🚀"
-                      title="Math Game"
-                      description="Count number of rockets!"
+                      title="Rocket Game"
+                      description="Count rockets in space! Đếm số tên lửa trong không gian!"
                       onClick={() =>
                         setGameMode(
                           'NumberRocketGame'
@@ -1129,8 +1134,8 @@ export default function App() {
                     />
 					<GameCard
                       emoji="🪐"
-                      title="Match Game"
-                      description="Match words-planets!"
+                      title="Planet Match Game"
+                      description="Match planets and words! Ghép các hành tinh và từ ngữ!"
                       onClick={() =>
                         setGameMode(
                           'PlanetMatchGame'
@@ -1140,7 +1145,7 @@ export default function App() {
 					<GameCard
                       emoji="🌙"
                       title="Shape Galaxy Game"
-                      description="Find the shapes of galaxies!"
+                      description="Learn shapes in space! Học về các hình khối trong không gian!"
                       onClick={() =>
                         setGameMode(
                           'ShapeGalaxyGame'
@@ -1155,7 +1160,7 @@ export default function App() {
               {selectedWorld ===
                 'Ocean World' && (
                 <>
-                  <h2>🌊 Ocean World</h2>
+                  <h2>🌊 Ocean World - Thế giới biển</h2>
 
                   <div
                     style={{
@@ -1167,8 +1172,8 @@ export default function App() {
                   >          
 					<GameCard
                       emoji="🐠"
-                      title="Ocean Matching Game"
-                      description="Match sea animal!"
+                      title="Ocean Match Game"
+                      description="Match ocean animals! Ghép từ các loài động vật biển!"
                       onClick={() =>
                         setGameMode(
                           'OceanMatchGame'
@@ -1177,8 +1182,8 @@ export default function App() {
                     />
 					<GameCard
                       emoji="🦀"
-                      title="Count Game"
-                      description="Find number of crabs!"
+                      title="Crab Count Game"
+                      description="Count the crabs! Đếm những con cua!"
                       onClick={() =>
                         setGameMode(
                           'CrabCountGame'
@@ -1187,8 +1192,8 @@ export default function App() {
                     />	
 					<GameCard
                       emoji="🐙"
-                      title="Count Game"
-                      description="Find number of tentacles!"
+                      title="Tentacle Count Game"
+                      description="Count the octopus tentacles! Đếm các xúc tu của con bạch tuộc!"
                       onClick={() =>
                         setGameMode(
                           'TentacleCountGame'

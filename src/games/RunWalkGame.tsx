@@ -74,7 +74,6 @@ export default function RunWalkGame({
     await speak('Is it run or walk?')
     await speak('Là chạy hay đi bộ?', 'vi-VN')
   }
-
   speakLines()
 }, [item])
 
@@ -142,7 +141,7 @@ export default function RunWalkGame({
       	<button onClick={onBack} style={nextButton}>⬅ Back</button>
 
       <h2>
-        🏃🚶 Run or Walk
+        🏃🚶 Run or Walk - Chạy hay Đi bộ
       </h2>
 
       <h3

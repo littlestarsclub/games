@@ -69,12 +69,15 @@ export default function HotColdGame({
 
 
   useEffect(() => {
-  const speakLines = async () => {
+  const speakLineEn = async () => {
     await speak('Is it hot or cold?')
-    await speak('Là nóng hay lạnh?', 'vi-VN')
   }
 
-  speakLines()
+  const speakLineVi = async () => {
+    await speak('Là nóng hay lạnh?', 'vi-VN')
+  }
+  speakLineEn()
+  speakLineVi()
 }, [item])
 
   const nextRound = () => {
@@ -135,7 +138,7 @@ export default function HotColdGame({
     <div>
 	<button onClick={onBack} style={nextButton}>⬅ Back</button>
       <h2>
-        🔥❄️ Hot or Cold
+        🔥❄️ Hot or Cold - Nóng hay Lạnh
       </h2>
 
       <h3

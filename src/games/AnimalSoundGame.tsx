@@ -86,7 +86,7 @@ export default function AnimalSoundGame({
   const praisesVN = ['Làm tốt lắm!', 'Tuyệt vời!', 'Thật tuyệt diệu!', 'Đỉnh quá!', 'Hoan hô!']
   const randomPraiseVN = () => praisesVN[Math.floor(Math.random() * praisesVN.length)]
   
-  const handleClick = (animal: typeof animals[0]) => {
+  const handleClick = async (animal: typeof animals[0]) => {
     if (animal.name === target.name) {
       playCorrect()
 	  if (streak === 2) {speak('Amazing streak!')}
@@ -96,9 +96,8 @@ export default function AnimalSoundGame({
 	  setStreak((prev) => prev + 1)
       setScore(prev => prev + 1)
       setShowCelebrate(true)
-
-      speak(`${randomPraise()} ${animal.name}!`)
-      setTimeout(() => speak(animal.vi, 'vi-VN'), 800)
+      await speak(`${randomPraise()} ${animal.name}!`)
+	  await speak(`${randomPraiseVN()} ${animal.vi}!`, 'vi-VN')
 
       setTimeout(() => {
         setShowCelebrate(false)
@@ -107,7 +106,8 @@ export default function AnimalSoundGame({
     } else {
       playWrong()
 	  setStreak(0)
-      speak('Try again!')
+      await speak('Try again!')
+      await speak('Thử lại nhé!', 'vi-VN')
     }
   }
 
@@ -115,7 +115,7 @@ export default function AnimalSoundGame({
     <>
       <button onClick={onBack} style={nextButton}>⬅ Back</button>
 
-      <h2>🐾 Animal Sound Game</h2>
+      <h2>🐾 Animal Sound Game - Trò chơi Tiếng kêu Động vật</h2>
 
       <h2 style={{ color: '#ff7b00', marginTop: 10 }}>
         ⭐ Score: {score}

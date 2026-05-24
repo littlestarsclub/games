@@ -68,13 +68,12 @@ export default function FastSlowGame({
 
   const [showCelebrate, setShowCelebrate] =
     useState(false)
-  
+
   useEffect(() => {
   const speakLines = async () => {
     await speak('Is it fast or slow?')
     await speak('Là nhanh hay chậm?', 'vi-VN')
   }
-
   speakLines()
 }, [item])
 
@@ -143,7 +142,7 @@ export default function FastSlowGame({
       	<button onClick={onBack} style={nextButton}>⬅ Back</button>
 
       <h2>
-        ⚡🐢 Fast or Slow
+        ⚡🐢 Fast or Slow - Nhanh hay Chậm
       </h2>
 
       <h3

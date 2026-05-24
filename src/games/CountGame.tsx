@@ -87,7 +87,7 @@ const randomPraise = () => {
       >
         ⬅ Back
       </button>
-      <h2>⭐ Count the Stars!</h2>
+      <h2>⭐ Count the Stars! Đếm những vì sao!</h2>
 <h2
   style={{
     color: '#ff7b00',

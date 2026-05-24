@@ -52,7 +52,7 @@ const [streak, setStreak] =
   
 	const speakQuestion = async () => {
 		await speak(`Can you find ${target.name}?`)
-		await speak(target.vietnamese, 'vi-VN')
+		await speak(`Bạn có thể tìm thấy ${target.vietnamese} không?`, 'vi-VN')
 	}
 
 const praises = [
@@ -68,8 +68,12 @@ const randomPraise = () => {
     Math.floor(Math.random() * praises.length)
   ]
 }
-  const handleClick = (name: string) => {
+ const praisesVN = ['Tuyệt vời!', 'Giỏi lắm!', 'Xuất sắc!', 'Hay quá!', 'Yeah!']
+ const randomPraiseVN = () => praisesVN[Math.floor(Math.random() * praisesVN.length)]
+ 
+  const handleClick = async(name: string) => {
     if (name === target.name) {
+
       playCorrect()
 	  if (streak === 2) {
   speak('Amazing streak!')
@@ -86,21 +90,20 @@ if (streak === 9) {
 	  setStreak((prev) => prev + 1)
 	  setScore((prev) => prev + 1)
 	  setShowCelebrate(true)
-      speak(`${randomPraise()} ${name}!`)
-
+	  
+      await speak(`${randomPraise()} ${name}!`)
+	  await speak(`${randomPraiseVN()} ${target.vietnamese}!`, 'vi-VN')
+     
       setTimeout(() => {
-        speak(target.vietnamese, 'vi-VN')
-      }, 1000)
+      setShowCelebrate(false)
 
-      setTimeout(() => {
-  setShowCelebrate(false)
-
-  nextRound()
+      nextRound()
 }, 2000)
     } else {
       playWrong()
 	  setStreak(0)
-      speak('Try again!')
+      await speak('Try again!')
+      await speak('Thử lại nhé!', 'vi-VN')
     }
   }
 
@@ -112,7 +115,7 @@ if (streak === 9) {
       >
         ⬅ Back
       </button>
-      <h2>🎨 Find the Color!</h2>
+      <h2>🎨 Find the Color! Tìm màu!</h2>
 	  <h2
   style={{
     color: '#ff7b00',

@@ -104,7 +104,7 @@ export default function ShapeGalaxyGame({
     <>
       <button onClick={onBack} style={nextButton}>⬅ Back</button>
 
-      <h2>🌙 Shape Galaxy</h2>
+      <h2>🌙 Shape Galaxy - Hình dạng ngân hà</h2>
 
       <h2 style={{ color: '#00aaff', marginTop: 10 }}>
         ⭐ Score: {score}

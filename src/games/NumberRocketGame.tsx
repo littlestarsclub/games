@@ -88,7 +88,7 @@ const handleClick = async (choice: number) => {
     <>
       <button onClick={onBack} style={nextButton}>⬅ Back</button>
 
-      <h2>🚀 Count the Rockets</h2>
+      <h2>🚀 Count the Rockets - Đếm Tên lửa</h2>
 
       <h2 style={{ color: '#00aaff', marginTop: 10 }}>
         ⭐ Score: {score}

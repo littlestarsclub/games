@@ -57,8 +57,10 @@ export default function BigOrSmallGame({
 
   const praises = ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!']
   const randomPraise = () => praises[Math.floor(Math.random() * praises.length)]
-
-  const handleClick = (choice: typeof animals[0]) => {
+ const praisesVN = ['Tuyệt vời!', 'Giỏi lắm!', 'Xuất sắc!', 'Hay quá!', 'Yeah!']
+ const randomPraiseVN = () => praisesVN[Math.floor(Math.random() * praisesVN.length)]
+ 
+  const handleClick = async (choice: typeof animals[0]) => {
     const correct =
       questionType === 'bigger'
         ? choice.size === Math.max(a.size, b.size)
@@ -74,9 +76,9 @@ export default function BigOrSmallGame({
       setScore((prev) => prev + 1)
       setShowCelebrate(true)
 
-      speak(`${randomPraise()} ${choice.name}!`)
-      setTimeout(() => speak(choice.vietnamese, 'vi-VN'), 800)
-
+	  await speak(`${randomPraise()} ${choice.name}!`)
+	  await speak(`${randomPraiseVN()} ${choice.vietnamese}!`, 'vi-VN')
+	  
       setTimeout(() => {
         setShowCelebrate(false)
         nextRound()
@@ -84,7 +86,8 @@ export default function BigOrSmallGame({
     } else {
       playWrong()
 	  setStreak(0)
-      speak('Try again!')
+      await speak('Try again!')
+      await speak('Thử lại nhé!', 'vi-VN')
     }
   }
 
@@ -92,7 +95,7 @@ export default function BigOrSmallGame({
     <>
       <button onClick={onBack} style={nextButton}>⬅ Back</button>
 
-      <h2>🐘 Big or Small?</h2>
+      <h2>🐘 Big or Small? - To hay nhỏ?</h2>
 
       <h2 style={{ color: '#ff7b00', marginTop: 10 }}>
         ⭐ Score: {score}

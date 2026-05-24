@@ -107,7 +107,7 @@ export default function PlanetMatchGame({
     <>
       <button onClick={onBack} style={nextButton}>⬅ Back</button>
 
-      <h2>🪐 Planet Match</h2>
+      <h2>🪐 Planet Match - Ghép hành tinh</h2>
 
       <h2 style={{ color: '#00aaff', marginTop: 10 }}>
         ⭐ Score: {score}

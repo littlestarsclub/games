@@ -38,8 +38,13 @@ export default function ZooMemoryGame({
     setFlipped([])
     setMatched([])
   }
+const praises = [ 'Amazing!', 'Wonderful!', 'Great job!', 'Awesome!', 'Yay!',]
+const randomPraise = () => {return praises[ Math.floor(Math.random() * praises.length) ]}
 
-  const handleFlip = (index: number) => {
+ const praisesVN = ['Tuyệt vời!', 'Giỏi lắm!', 'Xuất sắc!', 'Hay quá!', 'Yeah!',]
+ const randomPraiseVN = () => praisesVN[Math.floor(Math.random() * praisesVN.length)]
+ 
+  const handleFlip = async(index: number) => {
     if (flipped.length === 2 || flipped.includes(index) || matched.includes(index)) {
       return
     }
@@ -63,14 +68,15 @@ export default function ZooMemoryGame({
         setMatched(prev => [...prev, i1, i2])
         setShowCelebrate(true)
 
-        speak(`Great job! ${card1.en}!`)
-        setTimeout(() => speak(card1.vi, 'vi-VN'), 600)
-
+	    await speak(`${randomPraise()} ${card1.en}!`)
+	    await speak(`${randomPraiseVN()} ${card1.vi}!`, 'vi-VN')
+	   
         setTimeout(() => setShowCelebrate(false), 1200)
       } else {
         playWrong()
 		setStreak(0)
-        speak('Try again!')
+        await speak('Try again!')
+        await speak('Thử lại nhé!', 'vi-VN')
       }
 
       setTimeout(() => setFlipped([]), 900)
@@ -81,7 +87,7 @@ export default function ZooMemoryGame({
     <>
       <button onClick={onBack} style={nextButton}>⬅ Back</button>
 
-      <h2>🧠🐯 Zoo Memory Match</h2>
+      <h2>🧠🐯 Zoo Memory Match - Trò chơi trí nhớ</h2>
 
       <h2 style={{ color: '#ff7b00', marginTop: 10 }}>
         ⭐ Score: {score}

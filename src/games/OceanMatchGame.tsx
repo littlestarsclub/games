@@ -106,7 +106,7 @@ export default function OceanMatchGame({
     <>
       <button onClick={onBack} style={nextButton}>⬅ Back</button>
 
-      <h2>🐠 Ocean Match</h2>
+      <h2>🐠 Ocean Animal Match - Ghép đôi Động vật Biển</h2>
 
       <h2 style={{ color: '#0099ff', marginTop: 10 }}>
         ⭐ Score: {score}

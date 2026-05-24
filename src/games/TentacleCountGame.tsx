@@ -77,7 +77,7 @@ export default function TentacleCountGame({
     <>
       <button onClick={onBack} style={nextButton}>⬅ Back</button>
 
-      <h2>🐙 Tentacle Count</h2>
+      <h2>🐙 Tentacle Count - Đếm số lượng xúc tu</h2>
 
       <h2 style={{ color: '#0099ff', marginTop: 10 }}>
         ⭐ Score: {score}

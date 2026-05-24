@@ -53,7 +53,7 @@ export default function MatchWordGame({
 
   const speakQuestion = async () => {
    if (direction === 'enToVi') {
-      await speak(`What is the Vietnamese word for`)
+      await speak(`What is the Vietnamese word for `)
       await speak(`Từ tiếng Việt là gì?`, 'vi-VN')
 	  await speak(`${target.en}?`)
     } else {
@@ -69,7 +69,7 @@ export default function MatchWordGame({
   const praisesVN = ['Làm tốt lắm!', 'Tuyệt vời!', 'Thật tuyệt diệu!', 'Đỉnh quá!', 'Hoan hô!']
   const randomPraiseVN = () => praisesVN[Math.floor(Math.random() * praisesVN.length)]
 
-  const handleClick = (choice: typeof words[0]) => {
+  const handleClick = async (choice: typeof words[0]) => {
     const correct =
       direction === 'enToVi'
         ? choice.vi === target.vi
@@ -98,7 +98,8 @@ export default function MatchWordGame({
     } else {
       playWrong()
 	  setStreak(0)
-      speak('Try again!')
+      await speak('Try again!')
+      await speak('Thử lại nhé!', 'vi-VN')
     }
   }
 
@@ -106,7 +107,7 @@ export default function MatchWordGame({
     <>
       <button onClick={onBack} style={nextButton}>⬅ Back</button>
 
-      <h2>🔤 Match the Word</h2>
+      <h2>🔤 Match the Word! Ghép từ!</h2>
 
       <h2 style={{ color: '#ff7b00', marginTop: 10 }}>
         ⭐ Score: {score}
