@@ -1,5 +1,6 @@
 body {
-
+  background: white;
+}
 .container {
   min-height: 100vh;
   display: flex;

@@ -1,7 +1,19 @@
 export const playCorrect = () => {
-  new Audio('/sounds/correct.mp3').play()
+  const sound = new Audio(
+    '/sounds/correct.mp3'
+  )
+
+  sound.volume = 0.4
+
+  sound.play()
 }
 
 export const playWrong = () => {
-  new Audio('/sounds/wrong.mp3').play()
+  const sound = new Audio(
+    '/sounds/wrong.mp3'
+  )
+
+  sound.volume = 0.35
+
+  sound.play()
 }
