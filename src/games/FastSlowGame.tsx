@@ -68,6 +68,8 @@ export default function FastSlowGame({
 
   const [showCelebrate, setShowCelebrate] =
     useState(false)
+	const [isLocked, setIsLocked] =
+  useState(false)
 
   useEffect(() => {
   const speakLines = async () => {
@@ -77,9 +79,17 @@ export default function FastSlowGame({
   speakLines()
 }, [item])
 
-  const nextRound = () => {
-    setItem(randomItem())
+ const nextRound = () => {
+  let newItem = randomItem()
+
+  while (
+    newItem.emoji === item.emoji
+  ) {
+    newItem = randomItem()
   }
+
+  setItem(newItem)
+}
   
   const praises = ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!']
   const randomPraise = () => praises[Math.floor(Math.random() * praises.length)]
@@ -90,13 +100,17 @@ export default function FastSlowGame({
   const handleAnswer = async (
     answer: string
   ) => {
+	  if (isLocked) return
     if (answer === item.name) {
 	  playCorrect()
+	  setIsLocked(true)
       addStar()
 
       setScore((prev) => prev + 1)
 
-      setStreak((prev) => prev + 1)
+      const newStreak = streak + 1
+
+	  setStreak(newStreak)
 
       setShowCelebrate(true)
 
@@ -107,33 +121,31 @@ export default function FastSlowGame({
       await speak(`${randomPraiseVN()} ${item.vi}!`, 'vi-VN')
 
       if (streak === 2) {
-        speak(
-          'Amazing streak!'
-        )
-      }
+  speak('Amazing streak!')
+}
 
-      if (streak === 4) {
-        speak(
-          'Super learner!'
-        )
-      }
+if (streak === 4) {
+  speak('Super learner!')
+}
 
-      if (streak === 9) {
-        speak(
-          'Wow! Superstar!'
-        )
-      }
+if (streak === 9) {
+  speak('Wow! Superstar!')
+}
 
-      setTimeout(() => {
-        setShowCelebrate(false)
+     nextRound()
 
-        nextRound()
-      }, 1200)
+setTimeout(() => {
+  setShowCelebrate(false)
+
+  setIsLocked(false)
+}, 1200)
     } else {
+  setIsLocked(true)
       playWrong()
       setStreak(0)
       await speak('Oops! Try again!')
       await speak('Ối! Thử lại nhé!', 'vi-VN') 
+	  setIsLocked(false)
     }
   }
 
@@ -203,9 +215,6 @@ export default function FastSlowGame({
       >
         {item.emoji}
       </div>
-
-     
-
       <div
         style={{
           display: 'flex',
@@ -215,6 +224,7 @@ export default function FastSlowGame({
         }}
       >
         <button
+		disabled={isLocked}
           onClick={() =>
             handleAnswer('fast')
           }
@@ -232,6 +242,7 @@ export default function FastSlowGame({
         </button>
 
         <button
+		disabled={isLocked}
           onClick={() =>
             handleAnswer('slow')
           }

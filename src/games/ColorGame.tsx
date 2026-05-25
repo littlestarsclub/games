@@ -37,8 +37,8 @@ export default function ColorGame({
   const [target, setTarget] = useState(colors[0])
   const [score, setScore] = useState(0)
   const [showCelebrate, setShowCelebrate] = useState(false)
-const [streak, setStreak] =
-  useState(0)
+  const [streak, setStreak] =  useState(0)
+  const [isLocked, setIsLocked] =   useState(false)
   useEffect(() => {
     nextRound()
   }, [])
@@ -72,9 +72,11 @@ const randomPraise = () => {
  const randomPraiseVN = () => praisesVN[Math.floor(Math.random() * praisesVN.length)]
  
   const handleClick = async(name: string) => {
+	  if (isLocked) return
     if (name === target.name) {
 
       playCorrect()
+	  setIsLocked(true)
 	  if (streak === 2) {
   speak('Amazing streak!')
 }
@@ -94,16 +96,20 @@ if (streak === 9) {
       await speak(`${randomPraise()} ${name}!`)
 	  await speak(`${randomPraiseVN()} ${target.vietnamese}!`, 'vi-VN')
      
-      setTimeout(() => {
-      setShowCelebrate(false)
+     setTimeout(() => {
+  setShowCelebrate(false)
 
-      nextRound()
+  nextRound()
+
+  setIsLocked(false)
 }, 2000)
     } else {
+  setIsLocked(true)
       playWrong()
 	  setStreak(0)
       await speak('Try again!')
       await speak('Thử lại nhé!', 'vi-VN')
+	  setIsLocked(false)
     }
   }
 
@@ -166,6 +172,7 @@ if (streak === 9) {
         {colors.map((item) => (
           <button
             key={item.name}
+			disabled={isLocked}
             onClick={() => handleClick(item.name)}
             style={{
               width: 140,

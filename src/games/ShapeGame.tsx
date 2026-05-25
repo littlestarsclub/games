@@ -33,6 +33,7 @@ export default function ShapeGame({
   const [score, setScore] = useState(0)
   const [showCelebrate, setShowCelebrate] = useState(false)
   const [streak, setStreak] =  useState(0)
+  const [isLocked, setIsLocked] =  useState(false)
 
   useEffect(() => {
     nextRound()
@@ -66,8 +67,10 @@ const randomPraise = () => {
  const randomPraiseVN = () => praisesVN[Math.floor(Math.random() * praisesVN.length)]
  
   const handleClick = async(shape: typeof shapes[0]) => {
+	  if (isLocked) return
     if (shape.name === target.name) {
 	  playCorrect()
+	  setIsLocked(true)
 	  if (streak === 2) { speak('Amazing streak!') }
 	  if (streak === 4) { speak('Super learner!') }
 	  if (streak === 9) { speak('WOW! Superstar!')}
@@ -84,11 +87,15 @@ const randomPraise = () => {
   setShowCelebrate(false)
 
   nextRound()
+
+  setIsLocked(false)
 }, 2000)
-    } else {
+   } else {
+  setIsLocked(true)
 	  setStreak(0)
       await speak('Try again!')
       await speak('Thử lại nhé!', 'vi-VN')
+	  setIsLocked(false)
     }
   }
 
@@ -149,6 +156,7 @@ const randomPraise = () => {
         {shapes.map((shape) => (
           <button
             key={shape.name}
+			disabled={isLocked}
             onClick={() => handleClick(shape)}
             style={shapeButton}
           >

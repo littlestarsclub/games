@@ -66,18 +66,16 @@ export default function HotColdGame({
 
   const [showCelebrate, setShowCelebrate] =
     useState(false)
+	const [isLocked, setIsLocked] =
+  useState(false)
 
 
   useEffect(() => {
-  const speakLineEn = async () => {
+  const speakLines = async () => {
     await speak('Is it hot or cold?')
+	await speak('Là nóng hay lạnh?', 'vi-VN')
   }
-
-  const speakLineVi = async () => {
-    await speak('Là nóng hay lạnh?', 'vi-VN')
-  }
-  speakLineEn()
-  speakLineVi()
+  speakLines()
 }, [item])
 
   const nextRound = () => {
@@ -93,8 +91,10 @@ export default function HotColdGame({
   const handleAnswer = async (
     answer: string
   ) => {
+	  if (isLocked) return
     if (answer === item.name) {
 	  playCorrect()
+	  setIsLocked(true)
       addStar()
 
       setScore((prev) => prev + 1)
@@ -122,15 +122,19 @@ export default function HotColdGame({
       }
 
       setTimeout(() => {
-        setShowCelebrate(false)
+  setShowCelebrate(false)
 
-        nextRound()
-      }, 1200)
+  nextRound()
+
+  setIsLocked(false)
+}, 2000)
     } else {
+  setIsLocked(true)
 	  playWrong()
       setStreak(0)
       await speak('Oops! Try again!')
       await speak('Ối! Thử lại nhé!', 'vi-VN')
+	  setIsLocked(false)
     }
   }
 
@@ -212,6 +216,7 @@ export default function HotColdGame({
         }}
       >
         <button
+		disabled={isLocked}
           onClick={() =>
             handleAnswer('hot')
           }
@@ -229,6 +234,7 @@ export default function HotColdGame({
         </button>
 
         <button
+		disabled={isLocked}
           onClick={() =>
             handleAnswer('cold')
           }

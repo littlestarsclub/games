@@ -48,6 +48,7 @@ export default function AnimalSoundGame({
   const [score, setScore] = useState(0)
   const [showCelebrate, setShowCelebrate] = useState(false)
   const [streak, setStreak] =  useState(0)
+  const [isLocked, setIsLocked] =  useState(false)
 
   useEffect(() => {
     nextRound()
@@ -87,8 +88,10 @@ export default function AnimalSoundGame({
   const randomPraiseVN = () => praisesVN[Math.floor(Math.random() * praisesVN.length)]
   
   const handleClick = async (animal: typeof animals[0]) => {
+	  if (isLocked) return
     if (animal.name === target.name) {
       playCorrect()
+	  setIsLocked(true)
 	  if (streak === 2) {speak('Amazing streak!')}
 	  if (streak === 4) {speak('Super learner!')}
 	  if (streak === 9) {speak('WOW! Superstar!')}
@@ -100,14 +103,19 @@ export default function AnimalSoundGame({
 	  await speak(`${randomPraiseVN()} ${animal.vi}!`, 'vi-VN')
 
       setTimeout(() => {
-        setShowCelebrate(false)
-        nextRound()
-      }, 1800)
+  setShowCelebrate(false)
+
+  nextRound()
+
+  setIsLocked(false)
+}, 2000)
     } else {
+  setIsLocked(true)
       playWrong()
 	  setStreak(0)
       await speak('Try again!')
       await speak('Thử lại nhé!', 'vi-VN')
+	  setIsLocked(false)
     }
   }
 
@@ -160,6 +168,7 @@ export default function AnimalSoundGame({
         {choices.map((animal, i) => (
           <button
             key={i}
+			disabled={isLocked}
             onClick={() => handleClick(animal)}
             style={emojiButton}
           >

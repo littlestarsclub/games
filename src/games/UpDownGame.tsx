@@ -67,6 +67,9 @@ export default function UpDownGame({
 
   const [showCelebrate, setShowCelebrate] =
     useState(false)
+	
+	const [isLocked, setIsLocked] =
+  useState(false)
 
   useEffect(() => {
   const speakLineEn = async () => {
@@ -92,8 +95,10 @@ export default function UpDownGame({
   const handleAnswer = async (
     answer: string
   ) => {
+	  if (isLocked) return
     if (answer === item.name) {
 	  playCorrect()
+	  setIsLocked(true)
       addStar()
 
       setScore((prev) => prev + 1)
@@ -128,15 +133,19 @@ export default function UpDownGame({
       }
 
       setTimeout(() => {
-        setShowCelebrate(false)
+  setShowCelebrate(false)
 
-        nextRound()
-      }, 1200)
+  nextRound()
+
+  setIsLocked(false)
+}, 2000)
     } else {
+  setIsLocked(true)
 	  playWrong()
       setStreak(0)
 	  await speak('Oops! Try again!')
       await speak('Ối! Thử lại nhé!', 'vi-VN')
+	  setIsLocked(false)
     }
   }
 
@@ -209,8 +218,6 @@ export default function UpDownGame({
       >
         {item.emoji}
       </div>
-
-     
       <div
         style={{
           display: 'flex',
@@ -220,6 +227,7 @@ export default function UpDownGame({
         }}
       >
         <button
+		disabled={isLocked}
           onClick={() =>
             handleAnswer('up')
           }
@@ -237,6 +245,7 @@ export default function UpDownGame({
         </button>
 
         <button
+		disabled={isLocked}
           onClick={() =>
             handleAnswer('down')
           }

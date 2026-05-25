@@ -35,6 +35,7 @@ export default function VehicleGame({
 	const [target, setTarget] = useState(vehicles[0])
 	const [score, setScore] = useState(0)
 	const [showCelebrate, setShowCelebrate] = useState(false)
+	const [isLocked, setIsLocked] =  useState(false)
 
 	useEffect(() => { nextRound() }, [])
 
@@ -47,38 +48,43 @@ export default function VehicleGame({
 		await speak(`Can you find ${target.name}?`)
 		await speak(target.vietnamese, 'vi-VN')
 	}
-	/*const speakQuestion = () => {
-		speak(`Can you find ${target.name}?`)
-		setTimeout(() => {
-			speak(target.vietnamese, 'vi-VN')
-		}, 1000)
-	}*/
 
-	const praises = ['Amazing!', 'Wonderful!', 'Great job!', 'Awesome!', 'Yay!',]
-
-	const randomPraise = () => {
-		return praises[Math.floor(Math.random() * praises.length)]
-	}
+	const praises = ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!']
+	const randomPraise = () => praises[Math.floor(Math.random() * praises.length)]
+	const praisesVN = ['Làm tốt lắm!', 'Tuyệt vời!', 'Thật tuyệt diệu!', 'Đỉnh quá!', 'Hoan hô!']
+	const randomPraiseVN = () => praisesVN[Math.floor(Math.random() * praisesVN.length)]
 	
-	const handleClick = (vehicle: typeof vehicles[0]) => {
+	const handleClick = async(vehicle: typeof vehicles[0]) => {
+		if (isLocked) return
 		if (vehicle.name === target.name) {
 			playCorrect()
+			setIsLocked(true)
 	 
-			new Audio(`/sounds/${vehicle.soundFile}`).play()
+			//new Audio(`/sounds/${vehicle.soundFile}`).play()
 			addStar()
 
 			setScore((prev) => prev + 1)
 			setShowCelebrate(true)
-			speak(`${randomPraise()} ${vehicle.name}!`)
+
+		    // Speak English praise
+			await speak(`${randomPraise()} ${vehicle.name}!`)
+
+			// Speak Vietnamese praise
+			await speak(`${randomPraiseVN()} ${vehicle.vietnamese}!`, 'vi-VN')
+
 
 			setTimeout(() => {
-				speak(vehicle.vietnamese, 'vi-VN') }, 1000)
+  setShowCelebrate(false)
 
-			setTimeout(() => {
-				setShowCelebrate(false)
-				nextRound()
-			}, 2000)
-		} else { speak('Try again!')}
+  nextRound()
+
+  setIsLocked(false)
+}, 2000)
+		} else {
+	setIsLocked(true) 
+	await speak('Try again!')
+    await speak('Thử lại nhé!', 'vi-VN') 
+	setIsLocked(false)}
 	}
 	
 	return (

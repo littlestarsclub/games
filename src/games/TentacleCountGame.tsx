@@ -15,6 +15,7 @@ export default function TentacleCountGame({
   const [score, setScore] = useState(0)
   const [showCelebrate, setShowCelebrate] = useState(false)
   const [streak, setStreak] =  useState(0)
+  const [isLocked, setIsLocked] =   useState(false)
 
   useEffect(() => {
     nextRound()
@@ -46,8 +47,10 @@ export default function TentacleCountGame({
   const randomPraiseVN = () => praisesVN[Math.floor(Math.random() * praisesVN.length)]
  
   const handleClick = async (choice: number) => {
+	  if (isLocked) return
     if (choice === tentacles) {
       playCorrect()
+	  setIsLocked(true)
 	  if (streak === 2) {speak('Amazing streak!')}
 	  if (streak === 4) {speak('Super learner!')}
 	  if (streak === 9) {speak('WOW! Superstar!')}
@@ -63,13 +66,19 @@ export default function TentacleCountGame({
       await speak(`${randomPraiseVN()} ${choice}!`, 'vi-VN')
 
       setTimeout(() => {
-        setShowCelebrate(false)
-        nextRound()
-      }, 1500)
+  setShowCelebrate(false)
+
+  nextRound()
+
+  setIsLocked(false)
+}, 2000)
     } else {
+  setIsLocked(true)
       playWrong()
 	  setStreak(0)
-      speak('Try again!')
+      await speak('Try again!')
+      await speak('Thử lại nhé!', 'vi-VN') 
+	  setIsLocked(false)
     }
   }
 
@@ -139,6 +148,7 @@ export default function TentacleCountGame({
         {choices.map((c, i) => (
           <button
             key={i}
+			disabled={isLocked}
             onClick={() => handleClick(c)}
             style={{
               ...emojiButton,

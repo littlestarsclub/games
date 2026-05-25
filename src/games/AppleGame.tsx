@@ -21,6 +21,7 @@ export default function AppleGame({
   const [score, setScore] = useState(0)
   const [showCelebrate, setShowCelebrate] = useState(false)
   const [streak, setStreak] =  useState(0)
+  const [isLocked, setIsLocked] =  useState(false)
   
   useEffect(() => {
     nextRound()
@@ -51,8 +52,10 @@ const randomPraise = () => {return praises[ Math.floor(Math.random() * praises.l
  const randomPraiseVN = () => praisesVN[Math.floor(Math.random() * praisesVN.length)]
  
   const handleClick = async( item: typeof items[0]) => {
+	  if (isLocked) return
     if (item.name === target.name) {
       playCorrect()
+	  setIsLocked(true)
 	  if (streak === 2) {
   speak('Amazing streak!')
 }
@@ -72,15 +75,19 @@ if (streak === 9) {
 	  await speak(`${randomPraiseVN()} ${item.vietnamese}!`, 'vi-VN')
      
       setTimeout(() => {
-      setShowCelebrate(false)
+  setShowCelebrate(false)
 
-      nextRound()
+  nextRound()
+
+  setIsLocked(false)
 }, 2000)
     } else {
       playWrong()
+	  setIsLocked(true)
 	  setStreak(0)
       await speak('Try again!')
       await speak('Thử lại nhé!', 'vi-VN')
+	  setIsLocked(false)
     }
   }
 
@@ -143,6 +150,7 @@ if (streak === 9) {
         {items.map((item) => (
           <button
             key={item.name}
+			disabled={isLocked}
             onClick={() => handleClick(item)}
             style={gameButton}
           >

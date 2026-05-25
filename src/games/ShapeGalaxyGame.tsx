@@ -25,6 +25,7 @@ export default function ShapeGalaxyGame({
   const [score, setScore] = useState(0)
   const [showCelebrate, setShowCelebrate] = useState(false)
   const [streak, setStreak] =  useState(0)
+  const [isLocked, setIsLocked] =   useState(false)
 
   useEffect(() => {
     nextRound()
@@ -67,6 +68,7 @@ export default function ShapeGalaxyGame({
   const randomPraiseVN = () => praisesVN[Math.floor(Math.random() * praisesVN.length)]
  
   const handleClick = async(choice: typeof shapes[0]) => {
+	  if (isLocked) return
     const correct =
       direction === 'enToVi'
         ? choice.vi === target.vi
@@ -74,6 +76,7 @@ export default function ShapeGalaxyGame({
 
     if (correct) {
       playCorrect()
+	  setIsLocked(true)
 	  if (streak === 2) {speak('Amazing streak!')}
 	  if (streak === 4) {speak('Super learner!')}
 	  if (streak === 9) {speak('WOW! Superstar!')}
@@ -89,14 +92,19 @@ export default function ShapeGalaxyGame({
       await speak(`${randomPraiseVN()} ${target.vi}!`, 'vi-VN')
 
       setTimeout(() => {
-        setShowCelebrate(false)
-        nextRound()
-      }, 1500)
+  setShowCelebrate(false)
+
+  nextRound()
+
+  setIsLocked(false)
+}, 2000)
     } else {
+  setIsLocked(true)
       playWrong()
 	  setStreak(0)
       await speak('Try again!')
       await speak('Thử lại nhé!', 'vi-VN')
+	  setIsLocked(false)
     }
   }
 
@@ -157,6 +165,7 @@ export default function ShapeGalaxyGame({
         {choices.map((c, i) => (
           <button
             key={i}
+			disabled={isLocked}
             onClick={() => handleClick(c)}
             style={{
               ...emojiButton,
