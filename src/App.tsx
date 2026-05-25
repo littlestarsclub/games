@@ -1348,6 +1348,28 @@ export default function App() {
           >
             Little Stars Club | Bé Học Vui 🌟
           </div>
+		  <div
+  style={{
+    marginTop: 16,
+  }}
+>
+  <a
+    href="https://facebook.com/littlestarsclub"
+    target="_blank"
+    rel="noreferrer"
+    style={{
+      display: 'inline-block',
+      background: '#1877f2',
+      color: 'white',
+      padding: '12px 20px',
+      borderRadius: 20,
+      textDecoration: 'none',
+      fontWeight: 'bold',
+    }}
+  >
+    📘 Follow Us on Facebook
+  </a>
+</div>
         </div>
       </div>
     </>
