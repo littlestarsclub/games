@@ -72,7 +72,7 @@ export default function AnimalSoundGame({
   }
 
   const playSound = () => {
-    new Audio(`/sounds/${target.soundFile}`).play()
+    new Audio(`sounds/${target.soundFile}`).play()
   }
 
   const speakQuestion = async () => {
