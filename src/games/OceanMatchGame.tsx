@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { speak } from '../utils/speak'
 import { playCorrect, playWrong } from '../utils/sounds'
 import { nextButton, speakButton, emojiButton } from '../utils/gameStyles'
+import { useGameLock } from '../utils/useGameLock'
 
 const oceanAnimals = [
   { emoji: '🐠', en: 'FISH', vi: 'CÁ' },
@@ -16,9 +17,15 @@ const oceanAnimals = [
 export default function OceanMatchGame({
   onBack,
   addStar,
+  difficulty,
+  completeGame,
 }: {
   onBack: () => void
   addStar: () => void
+  difficulty: string
+  completeGame: (
+    gameName: string
+  ) => void
 }) {
   const [target, setTarget] = useState(oceanAnimals[0])
   const [choices, setChoices] = useState<typeof oceanAnimals>([])
@@ -26,33 +33,47 @@ export default function OceanMatchGame({
   const [score, setScore] = useState(0)
   const [showCelebrate, setShowCelebrate] = useState(false)
   const [streak, setStreak] =  useState(0)
-  const [isLocked, setIsLocked] =   useState(false)
+  const {isLocked,  setIsLocked, isSpeaking, setIsSpeaking, disableUI, } = useGameLock()
+  
 
   useEffect(() => {
     nextRound()
-  }, [])
+  }, [difficulty])
 
   const nextRound = () => {
-    const randomAnimal =
-      oceanAnimals[Math.floor(Math.random() * oceanAnimals.length)]
-    setTarget(randomAnimal)
+	   if (isLocked) return
 
-    const dir = Math.random() > 0.5 ? 'enToVi' : 'viToEn'
-    setDirection(dir)
+  const randomAnimal =
+    oceanAnimals[Math.floor(Math.random() * oceanAnimals.length)]
+  setTarget(randomAnimal)
 
-    let wrong = oceanAnimals
-      .filter(a => a.en !== randomAnimal.en)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 2)
+  // Random direction
+  const dir = Math.random() > 0.5 ? 'enToVi' : 'viToEn'
+  setDirection(dir)
 
-    const allChoices = [...wrong, randomAnimal].sort(
-      () => Math.random() - 0.5
-    )
+  // Number of choices based on difficulty
+  const choiceCount =
+    difficulty === 'easy' ? 3 :
+    difficulty === 'medium' ? 4 :
+    6
 
-    setChoices(allChoices)
-  }
+  // Build wrong choices
+  let wrong = oceanAnimals
+    .filter(a => a.en !== randomAnimal.en)
+    .sort(() => Math.random() - 0.5)
+    .slice(0, choiceCount - 1)
+
+  // Combine and shuffle
+  const allChoices = [...wrong, randomAnimal].sort(
+    () => Math.random() - 0.5
+  )
+
+  setChoices(allChoices)
+}
+
 
   const speakQuestion = async () => {
+	  if (disableUI) return
     if (direction === 'enToVi') {
       await speak(`What is the Vietnamese word for`)
       await speak(`Từ tiếng Việt là gì?`, 'vi-VN')
@@ -62,6 +83,7 @@ export default function OceanMatchGame({
       await speak(`Từ tiếng Anh là gì?`, 'vi-VN')
 	  await speak(`${target.vi}`, 'vi-VN')
     }
+	setIsSpeaking(false)
   }
 
   const praises = ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!']
@@ -84,7 +106,6 @@ export default function OceanMatchGame({
 	  if (streak === 9) {speak('WOW! Superstar!')}
       addStar()
 	  setStreak((prev) => prev + 1)
-      setScore(prev => prev + 1)
       setShowCelebrate(true)
 
        // Speak English praise
@@ -93,6 +114,9 @@ export default function OceanMatchGame({
       // Speak Vietnamese praise
       await speak(`${randomPraiseVN()} ${target.vi}!`, 'vi-VN')
 
+if (newScore >= 5) {
+  completeGame('OceanMatchGame')
+}
      setTimeout(() => {
   setShowCelebrate(false)
 
@@ -172,11 +196,19 @@ export default function OceanMatchGame({
         ))}
       </div>
 
-      <button onClick={speakQuestion} style={speakButton}>
+      <button disabled={disableUI} onClick={speakQuestion} style={{
+    ...speakButton,
+    opacity:
+      isLocked || isSpeaking ? 0.5 : 1,
+  }}>
         🔊 Hear Question
       </button>
 
-      <button onClick={nextRound} style={nextButton}>
+      <button disabled={isLocked || isSpeaking} onClick={nextRound} style={{
+    ...nextButton,
+    opacity:
+      isLocked || isSpeaking ? 0.5 : 1,
+  }}>
         ➡️ Next
       </button>
     </>

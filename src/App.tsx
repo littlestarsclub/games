@@ -72,17 +72,18 @@ export default function App() {
 
   const [totalStars, setTotalStars] =
     useState(() => {
-      //const savedStars = localStorage.getItem(`little-stars-total-Emma`)
 	  const savedStars = localStorage.getItem(`little-stars-total-${currentKid}` )
       return savedStars
         ? Number(savedStars)
         : 0
     })
-
+const [completedGames, setCompletedGames] = useState<string[]>([])
   const musicRef = useRef(
     new Audio('music/happy.mp3')
   )
 
+const [difficulty, setDifficulty] =  useState('easy')
+  
   useEffect(() => {
     const savedStars =
       localStorage.getItem(
@@ -142,6 +143,18 @@ export default function App() {
       return newTotal
     })
   }
+
+const completeGame = (
+  gameName: string
+) => {
+  setCompletedGames((prev) => {
+    if (prev.includes(gameName)) {
+      return prev
+    }
+
+    return [...prev, gameName]
+  })
+}
 
   const goHome = () => {
     setGameMode('home')
@@ -377,6 +390,47 @@ export default function App() {
     'Noah',
     'Mia',
   ]
+  
+  const classroomGames = [
+  'apple',
+  'color',
+  'shape',
+  'MatchWordGame',
+]
+
+const playgroundGames = [
+  'UpDownGame',
+  'RunWalkGame',
+  'HotColdGame',
+  'FastSlowGame',
+]
+
+const zooGames = [
+  'AnimalsGame',
+  'animalSound',
+  'memory',
+  'BigOrSmallGame',
+]
+
+const spaceGames = [
+  'count',
+  'NumberRocketGame',
+  'PlanetMatchGame',
+]
+
+const oceanGames = [
+  'OceanMatchGame',
+  'CrabCountGame',
+  'TentacleCountGame',
+]
+
+const getProgress = (
+  games: string[]
+) => {
+  return games.filter((game) =>
+    completedGames.includes(game)
+  ).length
+}
 
   return (
     <>
@@ -428,7 +482,7 @@ export default function App() {
 	   {/* Floating Background */}
         <div style={floatingStar1}>⭐</div>
         <div style={floatingStar2}>☁️</div>
-        <div style={floatingStar3}>🌈</div>
+        <div style={floatingStar3}>✨</div>
         <div style={floatingStar4}>✨</div>
        <div
   style={{
@@ -576,6 +630,93 @@ export default function App() {
         {dailyChallenge}
       </p>
     </div>
+	
+	
+	
+	{/* DIFFICULTY */}
+<div
+  style={{
+    background: '#eef7ff',
+    padding: 20,
+    borderRadius: 24,
+    marginBottom: 20,
+  }}
+>
+  <h3>
+    🎯 Difficulty
+  </h3>
+
+  <div
+    style={{
+      display: 'flex',
+      gap: 12,
+      flexWrap: 'wrap',
+    }}
+  >
+    <button
+      onClick={() =>
+        setDifficulty('easy')
+      }
+      style={{
+        padding: '12px 20px',
+        borderRadius: 18,
+        border: 'none',
+        cursor: 'pointer',
+        background:
+          difficulty === 'easy'
+            ? '#55efc4'
+            : '#dfe6e9',
+      }}
+    >
+      🟢 Easy
+    </button>
+
+    <button
+      onClick={() =>
+        setDifficulty('medium')
+      }
+      style={{
+        padding: '12px 20px',
+        borderRadius: 18,
+        border: 'none',
+        cursor: 'pointer',
+        background:
+          difficulty === 'medium'
+            ? '#ffeaa7'
+            : '#dfe6e9',
+      }}
+    >
+      🟡 Medium
+    </button>
+
+    <button
+      onClick={() =>
+        setDifficulty('hard')
+      }
+      style={{
+        padding: '12px 20px',
+        borderRadius: 18,
+        border: 'none',
+        cursor: 'pointer',
+        background:
+          difficulty === 'hard'
+            ? '#fab1a0'
+            : '#dfe6e9',
+      }}
+    >
+      🔴 Hard
+    </button>
+  </div>
+</div>
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
     {/* THEMES */}
     <div
@@ -869,8 +1010,30 @@ export default function App() {
                         </h2>
 
                         <p>
-                          {world.text}
-                        </p>
+  {world.text}
+</p>
+
+<p
+  style={{
+    fontWeight: 'bold',
+    marginTop: 10,
+  }}
+>
+  {world.key === 'Classroom' &&
+    `${getProgress(classroomGames)} / ${classroomGames.length} Complete`}
+
+  {world.key === 'Playground' &&
+    `${getProgress(playgroundGames)} / ${playgroundGames.length} Complete`}
+
+  {world.key === 'Zoo' &&
+    `${getProgress(zooGames)} / ${zooGames.length} Complete`}
+
+  {world.key === 'Space Room' &&
+    `${getProgress(spaceGames)} / ${spaceGames.length} Complete`}
+
+  {world.key === 'Ocean World' &&
+    `${getProgress(oceanGames)} / ${oceanGames.length} Complete`}
+</p>
 
                         <p
                           style={{
@@ -1211,6 +1374,8 @@ export default function App() {
             <AppleGame
               onBack={goHome}
               addStar={addStar}
+			  difficulty={difficulty}
+			  completeGame={completeGame}
             />
           )}
 
@@ -1218,6 +1383,8 @@ export default function App() {
             <CountGame
               onBack={goHome}
               addStar={addStar}
+			  difficulty={difficulty}
+			  completeGame={completeGame}
             />
           )}
 		  
@@ -1225,12 +1392,16 @@ export default function App() {
             <NumberRocketGame
               onBack={goHome}
               addStar={addStar}
+			  difficulty={difficulty}
+			  completeGame={completeGame}
             />
           )}
           {gameMode === 'color' && (
             <ColorGame
               onBack={goHome}
               addStar={addStar}
+			  difficulty={difficulty}
+			  completeGame={completeGame}
             />
           )}
 
@@ -1238,6 +1409,8 @@ export default function App() {
             <ShapeGame
               onBack={goHome}
               addStar={addStar}
+			  difficulty={difficulty}
+			  completeGame={completeGame}
             />
           )}
 		  
@@ -1245,6 +1418,8 @@ export default function App() {
             <MatchWordGame
               onBack={goHome}
               addStar={addStar}
+			  difficulty={difficulty}
+			  completeGame={completeGame}
             />
           )}
 
@@ -1252,6 +1427,8 @@ export default function App() {
             <MemoryGame
               onBack={goHome}
               addStar={addStar}
+			  difficulty={difficulty}
+			  completeGame={completeGame}
             />
           )}
 
@@ -1259,6 +1436,8 @@ export default function App() {
             <AnimalGame
               onBack={goHome}
               addStar={addStar}
+			  difficulty={difficulty}
+			  completeGame={completeGame}
             />
           )}
 
@@ -1267,6 +1446,8 @@ export default function App() {
             <AnimalSoundGame
               onBack={goHome}
               addStar={addStar}
+			  difficulty={difficulty}
+			  completeGame={completeGame}
             />
           )}
 		    {gameMode ===
@@ -1274,6 +1455,8 @@ export default function App() {
             <BigOrSmallGame
               onBack={goHome}
               addStar={addStar}
+			  difficulty={difficulty}
+			  completeGame={completeGame}
             />
           )}
 		   {gameMode ===
@@ -1281,6 +1464,8 @@ export default function App() {
             <OceanMatchGame
               onBack={goHome}
               addStar={addStar}
+			  difficulty={difficulty}
+			  completeGame={completeGame}
             />
           )}
 		  {gameMode ===
@@ -1288,6 +1473,8 @@ export default function App() {
             <PlanetMatchGame
               onBack={goHome}
               addStar={addStar}
+			  difficulty={difficulty}
+			  completeGame={completeGame}
             />
           )}
 		  {gameMode ===
@@ -1295,6 +1482,8 @@ export default function App() {
             <CrabCountGame
               onBack={goHome}
               addStar={addStar}
+			  difficulty={difficulty}
+			  completeGame={completeGame}
             />
           )}
 		   {gameMode ===
@@ -1302,6 +1491,8 @@ export default function App() {
             <TentacleCountGame
               onBack={goHome}
               addStar={addStar}
+			  difficulty={difficulty}
+			  completeGame={completeGame}
             />
           )}
 		   {gameMode ===
@@ -1309,6 +1500,8 @@ export default function App() {
             <UpDownGame
               onBack={goHome}
               addStar={addStar}
+			  difficulty={difficulty}
+			  completeGame={completeGame}
             />
           )}
 		   {gameMode ===
@@ -1316,6 +1509,8 @@ export default function App() {
             <HotColdGame
               onBack={goHome}
               addStar={addStar}
+			  difficulty={difficulty}
+			  completeGame={completeGame}
             />
           )}
 		  {gameMode ===
@@ -1323,6 +1518,8 @@ export default function App() {
             <FastSlowGame
               onBack={goHome}
               addStar={addStar}
+			  difficulty={difficulty}
+			  completeGame={completeGame}
             />
           )}
 		  {gameMode ===
@@ -1330,6 +1527,8 @@ export default function App() {
             <RunWalkGame
               onBack={goHome}
               addStar={addStar}
+			  difficulty={difficulty}
+			  completeGame={completeGame}
             />
           )}
 		  {gameMode ===
@@ -1337,6 +1536,8 @@ export default function App() {
             <ShapeGalaxyGame
               onBack={goHome}
               addStar={addStar}
+			  difficulty={difficulty}
+			  completeGame={completeGame}
             />
           )}
 		   <div

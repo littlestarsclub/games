@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 import { speak } from '../utils/speak'
 import { playCorrect, playWrong,} from '../utils/sounds'
 import { emojiButton, nextButton, speakButton, } from '../utils/gameStyles'
+import { useGameLock } from '../utils/useGameLock'
 
-const colors = [
+const easyItems = [
   {
     name: 'RED',
     vietnamese: 'ĐỎ',
@@ -25,34 +26,127 @@ const colors = [
     color: '#ffd60a',
   },
 ]
+const mediumItems = [
+  {
+    name: 'RED',
+    vietnamese: 'ĐỎ',
+    color: '#ff4d4d',
+  },
+  {
+    name: 'BLUE',
+    vietnamese: 'XANH DƯƠNG',
+    color: '#4d7cff',
+  },
+  {
+    name: 'GREEN',
+    vietnamese: 'XANH LÁ',
+    color: '#4caf50',
+  },
+  {
+    name: 'YELLOW',
+    vietnamese: 'VÀNG',
+    color: '#ffd60a',
+  },
+  {
+    name: 'ORANGE',
+    vietnamese: 'CAM',
+    color: '#ff8c42',
+  },
+  {
+    name: 'PURPLE',
+    vietnamese: 'TÍM',
+    color: '#9b59b6',
+  },
+]
+
+const hardItems = [
+  {
+    name: 'RED',
+    vietnamese: 'ĐỎ',
+    color: '#ff4d4d',
+  },
+  {
+    name: 'BLUE',
+    vietnamese: 'XANH DƯƠNG',
+    color: '#4d7cff',
+  },
+  {
+    name: 'GREEN',
+    vietnamese: 'XANH LÁ',
+    color: '#4caf50',
+  },
+  {
+    name: 'YELLOW',
+    vietnamese: 'VÀNG',
+    color: '#ffd60a',
+  },
+  {
+    name: 'ORANGE',
+    vietnamese: 'CAM',
+    color: '#ff8c42',
+  },
+  {
+    name: 'PURPLE',
+    vietnamese: 'TÍM',
+    color: '#9b59b6',
+  },
+  {
+    name: 'PINK',
+    vietnamese: 'HỒNG',
+    color: '#ff6fb5',
+  },
+  {
+    name: 'BROWN',
+    vietnamese: 'NÂU',
+    color: '#8d6e63',
+  },
+]
 
 export default function ColorGame({
   onBack,
   addStar,
+  difficulty,
+  completeGame,
 }: {
   onBack: () => void
   addStar: () => void
+  difficulty: string
+  completeGame: (
+    gameName: string
+  ) => void
 }) {
-	
-  const [target, setTarget] = useState(colors[0])
+  const items =  difficulty === 'easy' ? easyItems : difficulty === 'medium' ? mediumItems : hardItems
+  const [target, setTarget] = useState(items[0])
   const [score, setScore] = useState(0)
   const [showCelebrate, setShowCelebrate] = useState(false)
   const [streak, setStreak] =  useState(0)
-  const [isLocked, setIsLocked] =   useState(false)
-  useEffect(() => {
-    nextRound()
-  }, [])
+  const {isLocked,  setIsLocked, isSpeaking, setIsSpeaking, disableUI, } = useGameLock()
+  
 
-  const nextRound = () => {
-    const randomColor =
-      colors[Math.floor(Math.random() * colors.length)]
+useEffect(() => {
+  nextRound()
+}, [difficulty])
 
-    setTarget(randomColor)
+
+const nextRound = () => {
+  if (isLocked) return
+
+  let randomColor =
+    items[Math.floor(Math.random() * items.length)]
+
+  while (randomColor.name === target.name) {
+    randomColor =
+      items[Math.floor(Math.random() * items.length)]
   }
+
+  setTarget(randomColor)
+}
   
 	const speakQuestion = async () => {
+		if (disableUI) return
 		await speak(`Can you find ${target.name}?`)
 		await speak(`Bạn có thể tìm thấy ${target.vietnamese} không?`, 'vi-VN')
+		setIsSpeaking(false)
 	}
 
 const praises = [
@@ -90,12 +184,17 @@ if (streak === 9) {
 }
 	  addStar()
 	  setStreak((prev) => prev + 1)
-	  setScore((prev) => prev + 1)
 	  setShowCelebrate(true)
 	  
       await speak(`${randomPraise()} ${name}!`)
 	  await speak(`${randomPraiseVN()} ${target.vietnamese}!`, 'vi-VN')
-     
+      const newScore = score + 1
+
+setScore(newScore)
+
+if (newScore >= 5) {
+  completeGame('color')
+}
      setTimeout(() => {
   setShowCelebrate(false)
 
@@ -169,7 +268,7 @@ if (streak === 9) {
           flexWrap: 'wrap',
         }}
       >
-        {colors.map((item) => (
+        {items.map((item) => (
           <button
             key={item.name}
 			disabled={isLocked}
@@ -187,15 +286,25 @@ if (streak === 9) {
       </div>
 
       <button
+	  disabled={disableUI}
         onClick={speakQuestion}
-        style={speakButton}
+        style={{
+    ...speakButton,
+    opacity:
+      isLocked || isSpeaking ? 0.5 : 1,
+  }}
       >
         🔊 Hear the Question
       </button>
 
       <button
+	  disabled={disableUI}
         onClick={nextRound}
-        style={nextButton}
+        style={{
+    ...nextButton,
+    opacity:
+      isLocked || isSpeaking ? 0.5 : 1,
+  }}
       >
         ➡️ Next Question
       </button>

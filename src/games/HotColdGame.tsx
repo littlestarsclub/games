@@ -3,60 +3,73 @@ import { nextButton, speakButton, emojiButton } from '../utils/gameStyles'
 import { speak } from '../utils/speak'
 import { playCorrect, playWrong } from '../utils/sounds'
 
-const items = [
-  {
-    emoji: '☀️',
-    name: 'hot',
-	vi: 'nóng',
-  },
+const easyItems = [
+  // HOT
+  { emoji: '☀️', name: 'hot', vi: 'nóng' },
+  { emoji: '🔥', name: 'hot', vi: 'nóng' },
+  { emoji: '🌋', name: 'hot', vi: 'nóng' },
 
-  {
-    emoji: '🔥',
-    name: 'hot',
-	vi: 'nóng',
-  },
+  // COLD
+  { emoji: '❄️', name: 'cold', vi: 'lạnh' },
+  { emoji: '🧊', name: 'cold', vi: 'lạnh' },
+  { emoji: '☃️', name: 'cold', vi: 'lạnh' },
+]
+const mediumItems = [
+  // HOT
+  { emoji: '☀️', name: 'hot', vi: 'nóng' },
+  { emoji: '🔥', name: 'hot', vi: 'nóng' },
+  { emoji: '🌋', name: 'hot', vi: 'nóng' },
+  { emoji: '🍲', name: 'hot', vi: 'nóng' },   // hot soup
+  { emoji: '🌶️', name: 'hot', vi: 'nóng' },  // spicy hot
 
-  {
-    emoji: '🌋',
-    name: 'hot',
-	vi: 'nóng',
-  },
-  {
-    emoji: '❄️',
-    name: 'cold',
-	vi: 'lạnh',
-  },
+  // COLD
+  { emoji: '❄️', name: 'cold', vi: 'lạnh' },
+  { emoji: '🧊', name: 'cold', vi: 'lạnh' },
+  { emoji: '☃️', name: 'cold', vi: 'lạnh' },
+  { emoji: '🍦', name: 'cold', vi: 'lạnh' },  // ice cream
+  { emoji: '🥶', name: 'cold', vi: 'lạnh' },  // freezing face
+]
+const hardItems = [
+  // HOT
+  { emoji: '☀️', name: 'hot', vi: 'nóng' },
+  { emoji: '🔥', name: 'hot', vi: 'nóng' },
+  { emoji: '🌋', name: 'hot', vi: 'nóng' },
+  { emoji: '🍲', name: 'hot', vi: 'nóng' },
+  { emoji: '🌶️', name: 'hot', vi: 'nóng' },
+  { emoji: '♨️', name: 'hot', vi: 'nóng' },   // hot springs
+  { emoji: '🥵', name: 'hot', vi: 'nóng' },   // hot face
 
-  {
-    emoji: '🧊',
-    name: 'cold',
-	vi: 'lạnh',
-  },
-
-  {
-    emoji: '☃️',
-    name: 'cold',
-	vi: 'lạnh',
-  },
+  // COLD
+  { emoji: '❄️', name: 'cold', vi: 'lạnh' },
+  { emoji: '🧊', name: 'cold', vi: 'lạnh' },
+  { emoji: '☃️', name: 'cold', vi: 'lạnh' },
+  { emoji: '🍦', name: 'cold', vi: 'lạnh' },
+  { emoji: '🥶', name: 'cold', vi: 'lạnh' },
+  { emoji: '🌨️', name: 'cold', vi: 'lạnh' }, // snowing
+  { emoji: '🧥', name: 'cold', vi: 'lạnh' },  // winter coat
 ]
 
-function randomItem() {
-  return items[
-    Math.floor(
-      Math.random() * items.length
-    )
-  ]
+function randomItem(list) {
+  return list[Math.floor(Math.random() * list.length)]
 }
 
 export default function HotColdGame({
   onBack,
   addStar,
+  difficulty,
+  completeGame,
 }: {
   onBack: () => void
   addStar: () => void
+  difficulty: string
+  completeGame: (
+    gameName: string
+  ) => void
 }) {
+	  const items =  difficulty === 'easy' ? easyItems : difficulty === 'medium' ? mediumItems : hardItems
+  
   const [item, setItem] =
-    useState(randomItem())
+    useState(randomItem(items))
 
   const [score, setScore] =
     useState(0)
@@ -79,9 +92,8 @@ export default function HotColdGame({
 }, [item])
 
   const nextRound = () => {
-    setItem(randomItem())
-  }
-
+  setItem(randomItem(items))
+}
 
   const praises = ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!']
   const randomPraise = () => praises[Math.floor(Math.random() * praises.length)]
@@ -120,7 +132,13 @@ export default function HotColdGame({
           'Super learner!'
         )
       }
+const newScore = score + 1
 
+setScore(newScore)
+
+if (newScore >= 5) {
+  completeGame('HotColdGame')
+}
       setTimeout(() => {
   setShowCelebrate(false)
 

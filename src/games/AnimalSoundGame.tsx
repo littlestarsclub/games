@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 import { speak } from '../utils/speak'
 import { playCorrect, playWrong } from '../utils/sounds'
 import { nextButton, speakButton, emojiButton } from '../utils/gameStyles'
+import { useGameLock } from '../utils/useGameLock'
 
-const animals = [
+const easyItems  = [
   {
     emoji: '🐶',
     name: 'DOG',
@@ -36,50 +37,200 @@ const animals = [
   },
 ]
 
+const mediumItems = [
+ {
+    emoji: '🐶',
+    name: 'DOG',
+    vi: 'CHÓ',
+    soundFile: 'dog.mp3',
+  },
+  {
+    emoji: '🐱',
+    name: 'CAT',
+    vi: 'MÈO',
+    soundFile: 'cat.mp3',
+  },
+  {
+    emoji: '🐮',
+    name: 'COW',
+    vi: 'BÒ',
+    soundFile: 'cow.mp3',
+  },
+  {
+    emoji: '🐔',
+    name: 'CHICKEN',
+    vi: 'GÀ',
+    soundFile: 'chicken.mp3',
+  },
+  {
+    emoji: '🐴',
+    name: 'HORSE',
+    vi: 'NGỰA',
+    soundFile: 'horse.mp3',
+  },
+  {
+    emoji: '🐷',
+    name: 'PIG',
+    vi: 'HEO',
+    soundFile: 'pig.mp3',
+  },
+  {
+    emoji: '🐑',
+    name: 'SHEEP',
+    vi: 'CỪU',
+    soundFile: 'sheep.mp3',
+  },
+]
+
+const hardItems = [
+ {
+    emoji: '🐶',
+    name: 'DOG',
+    vi: 'CHÓ',
+    soundFile: 'dog.mp3',
+  },
+  {
+    emoji: '🐱',
+    name: 'CAT',
+    vi: 'MÈO',
+    soundFile: 'cat.mp3',
+  },
+  {
+    emoji: '🐮',
+    name: 'COW',
+    vi: 'BÒ',
+    soundFile: 'cow.mp3',
+  },
+  {
+    emoji: '🐔',
+    name: 'CHICKEN',
+    vi: 'GÀ',
+    soundFile: 'chicken.mp3',
+  },
+  {
+    emoji: '🐴',
+    name: 'HORSE',
+    vi: 'NGỰA',
+    soundFile: 'horse.mp3',
+  },
+  {
+    emoji: '🐷',
+    name: 'PIG',
+    vi: 'HEO',
+    soundFile: 'pig.mp3',
+  },
+  {
+    emoji: '🐑',
+    name: 'SHEEP',
+    vi: 'CỪU',
+    soundFile: 'sheep.mp3',
+  },
+  {
+    emoji: '🦆',
+    name: 'DUCK',
+    vi: 'VỊT',
+    soundFile: 'duck.mp3',
+  },
+  {
+    emoji: '🐸',
+    name: 'FROG',
+    vi: 'ẾCH',
+    soundFile: 'frog.mp3',
+  },
+]
+
 export default function AnimalSoundGame({
   onBack,
   addStar,
+  difficulty,
+  completeGame,
 }: {
   onBack: () => void
   addStar: () => void
+  difficulty: string
+  completeGame: ( gameName: string ) => void
 }) {
-  const [target, setTarget] = useState(animals[0])
-  const [choices, setChoices] = useState<typeof animals>([])
-  const [score, setScore] = useState(0)
-  const [showCelebrate, setShowCelebrate] = useState(false)
-  const [streak, setStreak] =  useState(0)
-  const [isLocked, setIsLocked] =  useState(false)
+const animals =
+  difficulty === 'easy'
+    ? easyItems
+    : difficulty === 'medium'
+    ? mediumItems
+    : hardItems
+
+const [target, setTarget] = useState(animals[0])
+const [choices, setChoices] = useState<Array<typeof animals[0]>>([])
+const [direction, setDirection] = useState<'enToVi' | 'viToEn'>('enToVi')
+const [score, setScore] = useState(0)
+const [showCelebrate, setShowCelebrate] = useState(false)
+const [streak, setStreak] = useState(0)
+const {isLocked,  setIsLocked, isSpeaking, setIsSpeaking, disableUI, } = useGameLock() 
 
   useEffect(() => {
     nextRound()
-  }, [])
+  }, [difficulty])
 
-  const nextRound = () => {
-    const randomAnimal =
-      animals[Math.floor(Math.random() * animals.length)]
-    setTarget(randomAnimal)
+const nextRound = () => {
+  if (isLocked) return
+  const randomAnimal = animals[Math.floor(Math.random() * animals.length)]
+  setTarget(randomAnimal)
 
-    let wrong = animals
-      .filter(a => a.name !== randomAnimal.name)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 2)
+  const dir = Math.random() > 0.5 ? 'enToVi' : 'viToEn'
+  setDirection(dir)
 
-    const allChoices = [...wrong, randomAnimal].sort(
-      () => Math.random() - 0.5
-    )
+  const choiceCount =
+    difficulty === 'easy' ? 3 :
+    difficulty === 'medium' ? 5 :
+    7
 
-    setChoices(allChoices)
+  let wrongChoices = animals
+    .filter(a => a.name !== randomAnimal.name)
+    .sort(() => Math.random() - 0.5)
+    .slice(0, choiceCount - 1)
+
+  const allChoices = [...wrongChoices, randomAnimal].sort(
+    () => Math.random() - 0.5
+  )
+
+  setChoices(allChoices)
+}
+
+const playSound = async () => {
+  if (disableUI) return
+
+  setIsSpeaking(true)
+
+  const audio = new Audio(
+    `sounds/${target.soundFile}`
+  )
+
+  audio.onended = () => {
+    setIsSpeaking(false)
   }
 
-  const playSound = () => {
-    new Audio(`sounds/${target.soundFile}`).play()
-  }
+  await audio.play()
+}
 
   const speakQuestion = async () => {
-    await speak('Which animal makes this sound?')
-    await speak('Con vật nào tạo ra âm thanh này?', 'vi-VN')
-    playSound()
+  if (disableUI) return
+
+  setIsSpeaking(true)
+
+  await speak('Which animal makes this sound?')
+  await speak(
+    'Con vật nào tạo ra âm thanh này?',
+    'vi-VN'
+  )
+
+  const audio = new Audio(
+    `sounds/${target.soundFile}`
+  )
+
+  audio.onended = () => {
+    setIsSpeaking(false)
   }
+
+  await audio.play()
+}
 
   const praises = ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!']
   const randomPraise = () =>
@@ -97,11 +248,17 @@ export default function AnimalSoundGame({
 	  if (streak === 9) {speak('WOW! Superstar!')}
       addStar()
 	  setStreak((prev) => prev + 1)
-      setScore(prev => prev + 1)
       setShowCelebrate(true)
       await speak(`${randomPraise()} ${animal.name}!`)
 	  await speak(`${randomPraiseVN()} ${animal.vi}!`, 'vi-VN')
 
+	  const newScore = score + 1
+
+setScore(newScore)
+
+if (newScore >= 5) {
+  completeGame('animalSound')
+}
       setTimeout(() => {
   setShowCelebrate(false)
 
@@ -152,7 +309,11 @@ export default function AnimalSoundGame({
         Listen to the sound and choose the correct animal:
       </p>
 
-      <button onClick={playSound} style={speakButton}>
+      <button disabled={disableUI} onClick={playSound} style={{
+    ...speakButton,
+    opacity:
+      isLocked || isSpeaking ? 0.5 : 1,
+  }}>
         🔊 Play Sound
       </button>
 
@@ -177,11 +338,19 @@ export default function AnimalSoundGame({
         ))}
       </div>
 
-      <button onClick={speakQuestion} style={speakButton}>
+      <button disabled={disableUI} onClick={speakQuestion}  style={{
+    ...speakButton,
+    opacity:
+      isLocked || isSpeaking ? 0.5 : 1,
+  }}>
         🔊 Hear Question
       </button>
 
-      <button onClick={nextRound} style={nextButton}>
+      <button disabled={isLocked || isSpeaking} onClick={nextRound} style={{
+    ...nextButton,
+    opacity:
+      isLocked || isSpeaking ? 0.5 : 1,
+  }}>
         ➡️ Next
       </button>
     </>

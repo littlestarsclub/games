@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 import { speak } from '../utils/speak'
 import { playCorrect, playWrong } from '../utils/sounds'
 import { nextButton, speakButton, emojiButton } from '../utils/gameStyles'
+import { useGameLock } from '../utils/useGameLock'
 
-const animals = [
+const easyItems = [
   { emoji: '🐶', en: 'DOG', vi: 'CHÓ' },
   { emoji: '🐱', en: 'CAT', vi: 'MÈO' },
   { emoji: '🐮', en: 'COW', vi: 'BÒ' },
@@ -14,46 +15,100 @@ const animals = [
   { emoji: '🐘', en: 'ELEPHANT', vi: 'VOI' },
 ]
 
+const mediumItems = [
+  { emoji: '🐶', en: 'DOG', vi: 'CHÓ' },
+  { emoji: '🐱', en: 'CAT', vi: 'MÈO' },
+  { emoji: '🐮', en: 'COW', vi: 'BÒ' },
+  { emoji: '🐷', en: 'PIG', vi: 'HEO' },
+  { emoji: '🐵', en: 'MONKEY', vi: 'KHỈ' },
+  { emoji: '🦁', en: 'LION', vi: 'SƯ TỬ' },
+  { emoji: '🐯', en: 'TIGER', vi: 'HỔ' },
+  { emoji: '🐘', en: 'ELEPHANT', vi: 'VOI' },
+  { emoji: '🐰', en: 'RABBIT', vi: 'THỎ' },
+  { emoji: '🐻', en: 'BEAR', vi: 'GẤU' },
+  { emoji: '🐼', en: 'PANDA', vi: 'GẤU TRÚC' },
+  { emoji: '🦊', en: 'FOX', vi: 'CÁO' },
+]
+
+const hardItems = [
+{ emoji: '🐶', en: 'DOG', vi: 'CHÓ' },
+  { emoji: '🐱', en: 'CAT', vi: 'MÈO' },
+  { emoji: '🐮', en: 'COW', vi: 'BÒ' },
+  { emoji: '🐷', en: 'PIG', vi: 'HEO' },
+  { emoji: '🐵', en: 'MONKEY', vi: 'KHỈ' },
+  { emoji: '🦁', en: 'LION', vi: 'SƯ TỬ' },
+  { emoji: '🐯', en: 'TIGER', vi: 'HỔ' },
+  { emoji: '🐘', en: 'ELEPHANT', vi: 'VOI' },
+  { emoji: '🐰', en: 'RABBIT', vi: 'THỎ' },
+  { emoji: '🐻', en: 'BEAR', vi: 'GẤU' },
+  { emoji: '🐼', en: 'PANDA', vi: 'GẤU TRÚC' },
+  { emoji: '🦊', en: 'FOX', vi: 'CÁO' },
+  { emoji: '🐨', en: 'KOALA', vi: 'GẤU KOALA' },
+  { emoji: '🐸', en: 'FROG', vi: 'ẾCH' },
+  { emoji: '🐔', en: 'CHICKEN', vi: 'GÀ' },
+  { emoji: '🦆', en: 'DUCK', vi: 'VỊT' },
+]
+
 export default function AnimalsGame({
   onBack,
   addStar,
+  difficulty,
+  completeGame,
 }: {
   onBack: () => void
   addStar: () => void
+  difficulty: string
+  completeGame: (
+  gameName: string
+  ) => void
 }) {
+  const animals =  difficulty === 'easy' ? easyItems : difficulty === 'medium' ? mediumItems : hardItems
   const [target, setTarget] = useState(animals[0])
   const [choices, setChoices] = useState<typeof animals>([])
   const [direction, setDirection] = useState<'enToVi' | 'viToEn'>('enToVi')
   const [score, setScore] = useState(0)
   const [showCelebrate, setShowCelebrate] = useState(false)
   const [streak, setStreak] =  useState(0)
-  const [isLocked, setIsLocked] =  useState(false)
+  const {isLocked,  setIsLocked, isSpeaking, setIsSpeaking, disableUI, } = useGameLock()
+  
 
   useEffect(() => {
     nextRound()
-  }, [])
+  }, [difficulty])
 
-  const nextRound = () => {
-    const randomAnimal =
-      animals[Math.floor(Math.random() * animals.length)]
-    setTarget(randomAnimal)
+ const nextRound = () => {
+  if (isLocked) return
+  const randomAnimal = animals[Math.floor(Math.random() * animals.length)]
+  setTarget(randomAnimal)
 
-    const dir = Math.random() > 0.5 ? 'enToVi' : 'viToEn'
-    setDirection(dir)
+  // Random direction
+  const dir = Math.random() > 0.5 ? 'enToVi' : 'viToEn'
+  setDirection(dir)
 
-    let wrong = animals
-      .filter(a => a.en !== randomAnimal.en)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 2)
+  // Number of choices based on difficulty
+  const choiceCount =
+    difficulty === 'easy' ? 3 :
+    difficulty === 'medium' ? 5 :
+    7
 
-    const allChoices = [...wrong, randomAnimal].sort(
-      () => Math.random() - 0.5
-    )
+  // Build wrong choices
+  let wrongChoices = animals
+    .filter(a => a.en !== randomAnimal.en)
+    .sort(() => Math.random() - 0.5)
+    .slice(0, choiceCount - 1)
 
-    setChoices(allChoices)
-  }
+  // Add correct answer
+  const allChoices = [...wrongChoices, randomAnimal].sort(
+    () => Math.random() - 0.5
+  )
+
+  setChoices(allChoices)
+}
+
 
   const speakQuestion = async () => {
+	if (disableUI) return
+		setIsSpeaking(true)
     if (direction === 'enToVi') {
       await speak(`What is the Vietnamese word for`)
       await speak(`Từ tiếng Việt là gì?`, 'vi-VN')
@@ -63,6 +118,7 @@ export default function AnimalsGame({
       await speak(`Từ tiếng Anh là gì?`, 'vi-VN')
 	  await speak(`${target.vi}`, 'vi-VN')
     }
+	setIsSpeaking(false)
   }
 
   const praises = ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!']
@@ -86,7 +142,6 @@ export default function AnimalsGame({
 	  if (streak === 9) {speak('WOW! Superstar!')}
       addStar()
 	  setStreak((prev) => prev + 1)
-      setScore(prev => prev + 1)
       setShowCelebrate(true)
 
       const word = direction === 'enToVi' ? target.vi : target.en
@@ -95,7 +150,12 @@ export default function AnimalsGame({
       if (lang === 'en-US') speak(`${randomPraise()} ${word}!`)
 	  if (lang === 'vi-VN') speak(`${randomPraiseVN()} ${word}!`, 'vi-VN')
 
-      setTimeout(() => {
+      const newScore = score + 1
+
+	  setScore(newScore)
+
+	  if (newScore >= 5) { completeGame('AnimalsGame') }
+	  setTimeout(() => {
   setShowCelebrate(false)
 
   nextRound()
@@ -172,11 +232,20 @@ export default function AnimalsGame({
         ))}
       </div>
 
-      <button onClick={speakQuestion} style={speakButton}>
+      <button disabled={isLocked || isSpeaking}
+	  onClick={speakQuestion} style={{
+    ...speakButton,
+    opacity:
+      isLocked || isSpeaking ? 0.5 : 1,
+  }}>
         🔊 Hear Question
       </button>
 
-      <button onClick={nextRound} style={nextButton}>
+      <button disabled={isLocked || isSpeaking} onClick={nextRound} style={{
+    ...nextButton,
+    opacity:
+      isLocked || isSpeaking ? 0.5 : 1,
+  }}>
         ➡️ Next
       </button>
     </>

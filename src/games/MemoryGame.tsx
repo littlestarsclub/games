@@ -3,20 +3,53 @@ import { speak } from '../utils/speak'
 import { playCorrect, playWrong } from '../utils/sounds'
 import { nextButton, emojiButton } from '../utils/gameStyles'
 
-const animals = [
+const easyItems = [
   { emoji: '🦁', en: 'LION', vi: 'SƯ TỬ' },
   { emoji: '🐯', en: 'TIGER', vi: 'HỔ' },
   { emoji: '🐵', en: 'MONKEY', vi: 'KHỈ' },
   { emoji: '🐘', en: 'ELEPHANT', vi: 'VOI' },
 ]
 
+const mediumItems = [
+  { emoji: '🦁', en: 'LION', vi: 'SƯ TỬ' },
+  { emoji: '🐯', en: 'TIGER', vi: 'HỔ' },
+  { emoji: '🐵', en: 'MONKEY', vi: 'KHỈ' },
+  { emoji: '🐘', en: 'ELEPHANT', vi: 'VOI' },
+  { emoji: '🦒', en: 'GIRAFFE', vi: 'HƯƠU CAO CỔ' },
+  { emoji: '🦓', en: 'ZEBRA', vi: 'NGỰA VẰN' },
+]
+
+const hardItems = [
+  { emoji: '🦁', en: 'LION', vi: 'SƯ TỬ' },
+  { emoji: '🐯', en: 'TIGER', vi: 'HỔ' },
+  { emoji: '🐵', en: 'MONKEY', vi: 'KHỈ' },
+  { emoji: '🐘', en: 'ELEPHANT', vi: 'VOI' },
+  { emoji: '🦒', en: 'GIRAFFE', vi: 'HƯƠU CAO CỔ' },
+  { emoji: '🦓', en: 'ZEBRA', vi: 'NGỰA VẰN' },
+  { emoji: '🐼', en: 'PANDA', vi: 'GẤU TRÚC' },
+  { emoji: '🦘', en: 'KANGAROO', vi: 'CHUỘT TÚI' },
+]
+
 export default function ZooMemoryGame({
   onBack,
   addStar,
+  difficulty,
+  completeGame,
 }: {
   onBack: () => void
   addStar: () => void
+  difficulty: string
+  completeGame: (
+    gameName: string
+  ) => void
 }) {
+const items =
+  difficulty === 'easy'
+    ? easyItems
+    : difficulty === 'medium'
+    ? mediumItems
+    : hardItems
+
   const [cards, setCards] = useState<any[]>([])
   const [flipped, setFlipped] = useState<number[]>([])
   const [matched, setMatched] = useState<number[]>([])
@@ -24,20 +57,25 @@ export default function ZooMemoryGame({
   const [showCelebrate, setShowCelebrate] = useState(false)
   const [streak, setStreak] =  useState(0)
 
-  useEffect(() => {
-    startGame()
-  }, [])
+useEffect(() => {
+  startGame()
+}, [difficulty])
 
-  const startGame = () => {
-    const duplicated = [...animals, ...animals]
-    const shuffled = duplicated
-      .map(a => ({ ...a, id: Math.random() }))
-      .sort(() => Math.random() - 0.5)
+const startGame = () => {
+  const duplicated = [...items, ...items]
 
-    setCards(shuffled)
-    setFlipped([])
-    setMatched([])
-  }
+  const shuffled = duplicated
+    .map((item) => ({
+      ...item,
+      id: Math.random(),
+    }))
+    .sort(() => Math.random() - 0.5)
+
+  setCards(shuffled)
+  setFlipped([])
+  setMatched([])
+}
+  
 const praises = [ 'Amazing!', 'Wonderful!', 'Great job!', 'Awesome!', 'Yay!',]
 const randomPraise = () => {return praises[ Math.floor(Math.random() * praises.length) ]}
 
@@ -64,13 +102,19 @@ const randomPraise = () => {return praises[ Math.floor(Math.random() * praises.l
 	    if (streak === 9) {speak('WOW! Superstar!')}
         addStar()
 		setStreak((prev) => prev + 1)
-        setScore(prev => prev + 1)
         setMatched(prev => [...prev, i1, i2])
         setShowCelebrate(true)
 
 	    await speak(`${randomPraise()} ${card1.en}!`)
 	    await speak(`${randomPraiseVN()} ${card1.vi}!`, 'vi-VN')
 	   
+	   const newScore = score + 1
+
+setScore(newScore)
+
+if (newScore >= 5) {
+  completeGame('memory')
+}
         setTimeout(() => setShowCelebrate(false), 1200)
       } else {
         playWrong()

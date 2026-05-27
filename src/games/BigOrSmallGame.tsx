@@ -2,36 +2,174 @@ import { useEffect, useState } from 'react'
 import { speak } from '../utils/speak'
 import { playCorrect, playWrong } from '../utils/sounds'
 import { nextButton, speakButton, emojiButton } from '../utils/gameStyles'
+import { useGameLock } from '../utils/useGameLock'
 
-const animals = [
-  { emoji: '🐭', name: 'MOUSE', vietnamese: 'CHUỘT', size: 1 },
-  { emoji: '🐱', name: 'CAT', vietnamese: 'MÈO', size: 2 },
-  { emoji: '🐶', name: 'DOG', vietnamese: 'CHÓ', size: 3 },
-  { emoji: '🐷', name: 'PIG', vietnamese: 'HEO', size: 4 },
-  { emoji: '🐮', name: 'COW', vietnamese: 'BÒ', size: 5 },
-  { emoji: '🐘', name: 'ELEPHANT', vietnamese: 'VOI', size: 6 },
+const easyAnimals = [
+  {
+    emoji: '🐭',
+    name: 'MOUSE',
+    vietnamese: 'CHUỘT',
+    size: 1,
+  },
+
+  {
+    emoji: '🐱',
+    name: 'CAT',
+    vietnamese: 'MÈO',
+    size: 2,
+  },
+
+  {
+    emoji: '🐶',
+    name: 'DOG',
+    vietnamese: 'CHÓ',
+    size: 3,
+  },
+
+  {
+    emoji: '🐷',
+    name: 'PIG',
+    vietnamese: 'HEO',
+    size: 4,
+  },
+]
+
+const mediumAnimals = [
+  {
+    emoji: '🐭',
+    name: 'MOUSE',
+    vietnamese: 'CHUỘT',
+    size: 1,
+  },
+
+  {
+    emoji: '🐱',
+    name: 'CAT',
+    vietnamese: 'MÈO',
+    size: 2,
+  },
+
+  {
+    emoji: '🐶',
+    name: 'DOG',
+    vietnamese: 'CHÓ',
+    size: 3,
+  },
+
+  {
+    emoji: '🐷',
+    name: 'PIG',
+    vietnamese: 'HEO',
+    size: 4,
+  },
+
+  {
+    emoji: '🐮',
+    name: 'COW',
+    vietnamese: 'BÒ',
+    size: 5,
+  },
+
+  {
+    emoji: '🐴',
+    name: 'HORSE',
+    vietnamese: 'NGỰA',
+    size: 6,
+  },
+]
+
+const hardAnimals = [
+  {
+    emoji: '🐭',
+    name: 'MOUSE',
+    vietnamese: 'CHUỘT',
+    size: 1,
+  },
+
+  {
+    emoji: '🐱',
+    name: 'CAT',
+    vietnamese: 'MÈO',
+    size: 2,
+  },
+
+  {
+    emoji: '🐶',
+    name: 'DOG',
+    vietnamese: 'CHÓ',
+    size: 3,
+  },
+
+  {
+    emoji: '🐷',
+    name: 'PIG',
+    vietnamese: 'HEO',
+    size: 4,
+  },
+
+  {
+    emoji: '🐮',
+    name: 'COW',
+    vietnamese: 'BÒ',
+    size: 5,
+  },
+
+  {
+    emoji: '🐴',
+    name: 'HORSE',
+    vietnamese: 'NGỰA',
+    size: 6,
+  },
+
+  {
+    emoji: '🦒',
+    name: 'GIRAFFE',
+    vietnamese: 'HƯƠU CAO CỔ',
+    size: 7,
+  },
+
+  {
+    emoji: '🐘',
+    name: 'ELEPHANT',
+    vietnamese: 'VOI',
+    size: 8,
+  },
 ]
 
 export default function BigOrSmallGame({
   onBack,
   addStar,
+  difficulty,
+  completeGame,
 }: {
   onBack: () => void
   addStar: () => void
+  difficulty: string
+  completeGame: (
+    gameName: string
+  ) => void
 }) {
+	const animals =
+  difficulty === 'easy'
+    ? easyAnimals
+    : difficulty === 'medium'
+    ? mediumAnimals
+    : hardAnimals
   const [a, setA] = useState(animals[0])
   const [b, setB] = useState(animals[1])
   const [questionType, setQuestionType] = useState<'bigger' | 'smaller'>('bigger')
   const [score, setScore] = useState(0)
   const [showCelebrate, setShowCelebrate] = useState(false)
   const [streak, setStreak] =  useState(0)
-  const [isLocked, setIsLocked] =  useState(false)
+  const {isLocked,  setIsLocked, isSpeaking, setIsSpeaking, disableUI, } = useGameLock()
+  
 
   useEffect(() => {
     nextRound()
-  }, [])
+  }, [difficulty])
 
   const nextRound = () => {
+	if (isLocked) return
     let first = animals[Math.floor(Math.random() * animals.length)]
     let second = animals[Math.floor(Math.random() * animals.length)]
 
@@ -47,6 +185,7 @@ export default function BigOrSmallGame({
   }
 
   const speakQuestion = async () => {
+	  if (disableUI) return
     if (questionType === 'bigger') {
       await speak('Which animal is bigger?')
       await speak('Con vật nào lớn hơn?', 'vi-VN')
@@ -54,6 +193,7 @@ export default function BigOrSmallGame({
       await speak('Which animal is smaller?')
       await speak('Con vật nào nhỏ hơn?', 'vi-VN')
     }
+	setIsSpeaking(false)
   }
 
   const praises = ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!']
@@ -76,12 +216,17 @@ export default function BigOrSmallGame({
 	  if (streak === 9) {speak('WOW! Superstar!')}
       addStar()
 	  setStreak((prev) => prev + 1)
-      setScore((prev) => prev + 1)
       setShowCelebrate(true)
 
 	  await speak(`${randomPraise()} ${choice.name}!`)
 	  await speak(`${randomPraiseVN()} ${choice.vietnamese}!`, 'vi-VN')
-	  
+	  	  const newScore = score + 1
+
+setScore(newScore)
+
+if (newScore >= 5) {
+  completeGame('BigOrSmallGame')
+}
       setTimeout(() => {
   setShowCelebrate(false)
 
@@ -150,11 +295,19 @@ export default function BigOrSmallGame({
         </button>
       </div>
 
-      <button onClick={speakQuestion} style={speakButton}>
+      <button disabled={disableUI} onClick={speakQuestion}  style={{
+    ...speakButton,
+    opacity:
+      isLocked || isSpeaking ? 0.5 : 1,
+  }}>
         🔊 Hear Question
       </button>
 
-      <button onClick={nextRound} style={nextButton}>
+      <button  disabled={isLocked || isSpeaking} onClick={nextRound} style={{
+    ...nextButton,
+    opacity:
+      isLocked || isSpeaking ? 0.5 : 1,
+  }}>
         ➡️ Next
       </button>
     </>

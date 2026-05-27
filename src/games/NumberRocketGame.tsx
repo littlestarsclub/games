@@ -2,14 +2,26 @@ import { useEffect, useState } from 'react'
 import { speak } from '../utils/speak'
 import { playCorrect, playWrong } from '../utils/sounds'
 import { nextButton, speakButton, emojiButton } from '../utils/gameStyles'
+import { useGameLock } from '../utils/useGameLock'
+
+const easyRange = { min: 0, max: 5 }
+const mediumRange = { min: 0, max: 10 }
+const hardRange = { min: 0, max: 20 }
 
 export default function NumberRocketGame({
   onBack,
   addStar,
+  difficulty,
+  completeGame,
 }: {
   onBack: () => void
   addStar: () => void
+  difficulty: string
+  completeGame: (
+    gameName: string
+  ) => void
 }) {
+  const range  =  difficulty === 'easy' ? easyRange : difficulty === 'medium' ? mediumRange : hardRange
   const [questionA, setQuestionA] = useState(0)
   const [questionB, setQuestionB] = useState(0)
   const [answer, setAnswer] = useState(0)
@@ -17,36 +29,43 @@ export default function NumberRocketGame({
   const [score, setScore] = useState(0)
   const [showCelebrate, setShowCelebrate] = useState(false)
   const [streak, setStreak] =  useState(0)
-  const [isLocked, setIsLocked] =   useState(false)
+  const {isLocked,  setIsLocked, isSpeaking, setIsSpeaking, disableUI, } = useGameLock()
+  
 
   useEffect(() => {
     nextRound()
-  }, [])
+  }, [difficulty])
 
-  const nextRound = () => {
-    // Preschool-friendly: only 0–3 rockets per side
-    const a = Math.floor(Math.random() * 3) // 0–2
-    const b = Math.floor(Math.random() * 3) // 0–2
+ const nextRound = () => {
+	 if (isLocked) return
 
-    const correct = a + b // max = 4
+  // Pick random rockets for A and B based on difficulty
+  const a = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min
+  const b = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min
 
-    setQuestionA(a)
-    setQuestionB(b)
-    setAnswer(correct)
+  const correct = a + b
 
-    let wrong: number[] = []
-    while (wrong.length < 2) {
-      const n = Math.floor(Math.random() * 6) // 0–5
-      if (n !== correct && !wrong.includes(n)) wrong.push(n)
-    }
+  setQuestionA(a)
+  setQuestionB(b)
+  setAnswer(correct)
 
-    const all = [...wrong, correct].sort(() => Math.random() - 0.5)
-    setChoices(all)
+  // Generate 2 wrong answers
+  const wrong = new Set()
+  while (wrong.size < 2) {
+    const n = Math.floor(Math.random() * (range.max * 2 + 1)) // possible sum range
+    if (n !== correct) wrong.add(n)
   }
 
+  const allChoices = [...wrong, correct].sort(() => Math.random() - 0.5)
+  setChoices(allChoices)
+}
+
+
   const speakQuestion = async () => {
+	  if (disableUI) return
     await speak(`How many rockets are there?`)
     await speak(`Có bao nhiêu tên lửa?`, 'vi-VN')
+	setIsSpeaking(false)
   }
 
   const praises = ['Blast off!', 'Amazing!', 'Great job!', 'Awesome!', 'Yay!']
@@ -64,7 +83,6 @@ const handleClick = async (choice: number) => {
 	if (streak === 9) {speak('WOW! Superstar!')}
     addStar()
 	setStreak((prev) => prev + 1)
-    setScore(prev => prev + 1)
     setShowCelebrate(true)
 
     // Speak English praise
@@ -72,7 +90,13 @@ const handleClick = async (choice: number) => {
 
     // Speak Vietnamese praise
     await speak(`${randomPraiseVN()} ${choice}!`, 'vi-VN')
+const newScore = score + 1
 
+setScore(newScore)
+
+if (newScore >= 5) {
+  completeGame('NumberRocketGame')
+}
    setTimeout(() => {
   setShowCelebrate(false)
 
@@ -160,11 +184,19 @@ const handleClick = async (choice: number) => {
         ))}
       </div>
 
-      <button onClick={speakQuestion} style={speakButton}>
+      <button disabled={disableUI} onClick={speakQuestion}  style={{
+    ...speakButton,
+    opacity:
+      isLocked || isSpeaking ? 0.5 : 1,
+  }}>
         🔊 Hear Question
       </button>
 
-      <button onClick={nextRound} style={nextButton}>
+      <button disabled={isLocked || isSpeaking} onClick={nextRound} style={{
+    ...nextButton,
+    opacity:
+      isLocked || isSpeaking ? 0.5 : 1,
+  }}>
         ➡️ Next
       </button>
     </>

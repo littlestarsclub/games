@@ -2,42 +2,65 @@ import { useEffect, useState } from 'react'
 import { speak } from '../utils/speak'
 import { playCorrect, playWrong } from '../utils/sounds'
 import { nextButton, speakButton, emojiButton } from '../utils/gameStyles'
+import { useGameLock } from '../utils/useGameLock'
+
+const easyRange = { min: 1, max: 5 }
+const mediumRange = { min: 1, max: 10 }
+const hardRange = { min: 1, max: 20 }
 
 export default function CrabCountGame({
   onBack,
   addStar,
+  difficulty,
+  completeGame,
 }: {
   onBack: () => void
   addStar: () => void
+  difficulty: string
+  completeGame: (
+    gameName: string
+  ) => void
 }) {
+  const range  =  difficulty === 'easy' ? easyRange : difficulty === 'medium' ? mediumRange : hardRange
   const [count, setCount] = useState(1)
   const [choices, setChoices] = useState<number[]>([])
   const [score, setScore] = useState(0)
   const [showCelebrate, setShowCelebrate] = useState(false)
   const [streak, setStreak] =  useState(0)
-  const [isLocked, setIsLocked] =  useState(false)
+  const {isLocked,  setIsLocked, isSpeaking, setIsSpeaking, disableUI, } = useGameLock()
+ 
 
   useEffect(() => {
     nextRound()
-  }, [])
+  }, [difficulty])
 
-  const nextRound = () => {
-    const newCount = Math.floor(Math.random() * 9) + 1 // 1–9 crabs
-    setCount(newCount)
+ const nextRound = () => {
+	 if (isLocked) return
+  // Pick a random crab count based on difficulty
+  const newCount =
+    Math.floor(Math.random() * (range.max - range.min + 1)) + range.min
 
-    let wrong = []
-    while (wrong.length < 2) {
-      const n = Math.floor(Math.random() * 9) + 1
-      if (n !== newCount && !wrong.includes(n)) wrong.push(n)
-    }
+  setCount(newCount)
 
-    const allChoices = [...wrong, newCount].sort(() => Math.random() - 0.5)
-    setChoices(allChoices)
+  // Generate 4 wrong answers
+  const wrong = new Set<number>()
+  while (wrong.size < 4) {
+    const n =
+      Math.floor(Math.random() * (range.max - range.min + 1)) + range.min
+    if (n !== newCount) wrong.add(n)
   }
 
+  // Combine and shuffle
+  const allChoices = [...wrong, newCount].sort(() => Math.random() - 0.5)
+  setChoices(allChoices)
+}
+
+
   const speakQuestion = async () => {
+	  if (disableUI) return
     await speak(`How many crabs do you see?`)
     await speak(`Có bao nhiêu con cua?`, 'vi-VN')
+	setIsSpeaking(false)
   }
 
   const praises = ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!']
@@ -55,7 +78,6 @@ export default function CrabCountGame({
 	  if (streak === 9) {speak('WOW! Superstar!')}
       addStar()
 	  setStreak((prev) => prev + 1)
-      setScore(prev => prev + 1)
       setShowCelebrate(true)
 
 	  // Speak English praise
@@ -63,7 +85,13 @@ export default function CrabCountGame({
 
       // Speak Vietnamese praise
       await speak(`${randomPraiseVN()} ${choice}!`, 'vi-VN')
+const newScore = score + 1
 
+setScore(newScore)
+
+if (newScore >= 5) {
+  completeGame('CrabCountGame')
+}
       setTimeout(() => {
   setShowCelebrate(false)
 
@@ -159,11 +187,19 @@ export default function CrabCountGame({
         ))}
       </div>
 
-      <button onClick={speakQuestion} style={speakButton}>
+      <button  disabled={disableUI} onClick={speakQuestion} style={{
+    ...speakButton,
+    opacity:
+      isLocked || isSpeaking ? 0.5 : 1,
+  }}>
         🔊 Hear Question
       </button>
 
-      <button onClick={nextRound} style={nextButton}>
+      <button disabled={isLocked || isSpeaking} onClick={nextRound} style={{
+    ...nextButton,
+    opacity:
+      isLocked || isSpeaking ? 0.5 : 1,
+  }}>
         ➡️ Next
       </button>
     </>

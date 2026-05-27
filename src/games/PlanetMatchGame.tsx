@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { speak } from '../utils/speak'
 import { playCorrect, playWrong } from '../utils/sounds'
 import { nextButton, speakButton, emojiButton } from '../utils/gameStyles'
+import { useGameLock } from '../utils/useGameLock'
 
 const planets = [
   { emoji: '☀️', en: 'SUN', vi: 'MẶT TRỜI' },
@@ -17,9 +18,15 @@ const planets = [
 export default function PlanetMatchGame({
   onBack,
   addStar,
+  difficulty,
+  completeGame,
 }: {
   onBack: () => void
   addStar: () => void
+  difficulty: string
+  completeGame: (
+    gameName: string
+  ) => void
 }) {
   const [target, setTarget] = useState(planets[0])
   const [choices, setChoices] = useState<typeof planets>([])
@@ -27,33 +34,46 @@ export default function PlanetMatchGame({
   const [score, setScore] = useState(0)
   const [showCelebrate, setShowCelebrate] = useState(false)
   const [streak, setStreak] =  useState(0)
-  const [isLocked, setIsLocked] =   useState(false)
+  const {isLocked,  setIsLocked, isSpeaking, setIsSpeaking, disableUI, } = useGameLock()
+  
 
   useEffect(() => {
     nextRound()
-  }, [])
+  }, [difficulty])
 
   const nextRound = () => {
-    const randomPlanet =
-      planets[Math.floor(Math.random() * planets.length)]
-    setTarget(randomPlanet)
+	   if (isLocked) return
+  const randomPlanet =
+    planets[Math.floor(Math.random() * planets.length)]
+  setTarget(randomPlanet)
 
-    const dir = Math.random() > 0.5 ? 'enToVi' : 'viToEn'
-    setDirection(dir)
+  // Random direction
+  const dir = Math.random() > 0.5 ? 'enToVi' : 'viToEn'
+  setDirection(dir)
 
-    let wrong = planets
-      .filter(p => p.en !== randomPlanet.en)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 2)
+  // Number of choices based on difficulty
+  const choiceCount =
+    difficulty === 'easy' ? 3 :
+    difficulty === 'medium' ? 4 :
+    6
 
-    const allChoices = [...wrong, randomPlanet].sort(
-      () => Math.random() - 0.5
-    )
+  // Build wrong choices
+  let wrong = planets
+    .filter(p => p.en !== randomPlanet.en)
+    .sort(() => Math.random() - 0.5)
+    .slice(0, choiceCount - 1)
 
-    setChoices(allChoices)
-  }
+  // Combine and shuffle
+  const allChoices = [...wrong, randomPlanet].sort(
+    () => Math.random() - 0.5
+  )
+
+  setChoices(allChoices)
+}
+
 
   const speakQuestion = async () => {
+	  if (disableUI) return
      if (direction === 'enToVi') {
       await speak(`What is the Vietnamese word for`)
       await speak(`Từ tiếng Việt là gì?`, 'vi-VN')
@@ -63,6 +83,7 @@ export default function PlanetMatchGame({
       await speak(`Từ tiếng Anh là gì?`, 'vi-VN')
 	  await speak(`${target.vi}`, 'vi-VN')
     }
+	setIsSpeaking(false)
   }
 
   const praises = ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!']
@@ -85,7 +106,6 @@ export default function PlanetMatchGame({
 	  if (streak === 9) {speak('WOW! Superstar!')}
       addStar()
 	  setStreak((prev) => prev + 1)
-      setScore(prev => prev + 1)
       setShowCelebrate(true)
 
       const word = direction === 'enToVi' ? target.vi : target.en
@@ -93,7 +113,13 @@ export default function PlanetMatchGame({
 
       if (lang === 'en-US') await speak(`${randomPraise()} ${word}!`)
 	  if (lang === 'vi-VN') await speak(`${randomPraiseVN()} ${word}!`, 'vi-VN')
+const newScore = score + 1
 
+setScore(newScore)
+
+if (newScore >= 5) {
+  completeGame('PlanetMatchGame')
+}
      setTimeout(() => {
   setShowCelebrate(false)
 
@@ -179,11 +205,19 @@ export default function PlanetMatchGame({
         ))}
       </div>
 
-      <button onClick={speakQuestion} style={speakButton}>
+      <button disabled={disableUI} onClick={speakQuestion} style={{
+    ...speakButton,
+    opacity:
+      isLocked || isSpeaking ? 0.5 : 1,
+  }}>
         🔊 Hear Question
       </button>
 
-      <button onClick={nextRound} style={nextButton}>
+      <button disabled={isLocked || isSpeaking} onClick={nextRound} style={{
+    ...nextButton,
+    opacity:
+      isLocked || isSpeaking ? 0.5 : 1,
+  }}>
         ➡️ Next
       </button>
     </>

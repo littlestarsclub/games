@@ -3,62 +3,75 @@ import { nextButton, speakButton, emojiButton } from '../utils/gameStyles'
 import { speak } from '../utils/speak'
 import { playCorrect, playWrong } from '../utils/sounds'
 
+const easyItems = [
+  // RUN
+  { emoji: '🏃', name: 'run', vi: 'chạy' },
+  { emoji: '🐇', name: 'run', vi: 'chạy' },
+  { emoji: '🐆', name: 'run', vi: 'chạy' },
 
-const items = [
-  {
-    emoji: '🏃',
-    name: 'run',
-	vi: 'chạy',
-  },
-
-  {
-    emoji: '🐇',
-    name: 'run',
-	vi: 'chạy',
-  },
-
-  {
-    emoji: '🐆',
-    name: 'run',
-	vi: 'chạy',
-  },
-
-  {
-    emoji: '🚶',
-    name: 'walk',
-	vi: 'đi bộ',
-  },
-
-  {
-    emoji: '🐢',
-    name: 'walk',
-	vi: 'đi bộ',
-  },
-
-  {
-    emoji: '🦆',
-    name: 'walk',
-	vi: 'đi bộ',
-  },
+  // WALK
+  { emoji: '🚶', name: 'walk', vi: 'đi bộ' },
+  { emoji: '🐢', name: 'walk', vi: 'đi bộ' },
+  { emoji: '🦆', name: 'walk', vi: 'đi bộ' },
 ]
 
-function randomItem() {
-  return items[
-    Math.floor(
-      Math.random() * items.length
-    )
-  ]
+const mediumItems = [
+  // RUN
+  { emoji: '🏃', name: 'run', vi: 'chạy' },
+  { emoji: '🐇', name: 'run', vi: 'chạy' },
+  { emoji: '🐆', name: 'run', vi: 'chạy' },
+  { emoji: '🏃‍♀️', name: 'run', vi: 'chạy' },
+  { emoji: '🐕', name: 'run', vi: 'chạy' },   // dog running
+
+  // WALK
+  { emoji: '🚶', name: 'walk', vi: 'đi bộ' },
+  { emoji: '🚶‍♀️', name: 'walk', vi: 'đi bộ' },
+  { emoji: '🐢', name: 'walk', vi: 'đi bộ' },
+  { emoji: '🦆', name: 'walk', vi: 'đi bộ' },
+  { emoji: '🐘', name: 'walk', vi: 'đi bộ' }, // elephants walk slowly
+]
+
+const hardItems = [
+  // RUN
+  { emoji: '🏃', name: 'run', vi: 'chạy' },
+  { emoji: '🏃‍♀️', name: 'run', vi: 'chạy' },
+  { emoji: '🐇', name: 'run', vi: 'chạy' },
+  { emoji: '🐆', name: 'run', vi: 'chạy' },
+  { emoji: '🐕', name: 'run', vi: 'chạy' },
+  { emoji: '🏃‍♂️💨', name: 'run', vi: 'chạy' }, // running fast
+  { emoji: '⚡', name: 'run', vi: 'chạy' },      // fast movement
+
+  // WALK
+  { emoji: '🚶', name: 'walk', vi: 'đi bộ' },
+  { emoji: '🚶‍♀️', name: 'walk', vi: 'đi bộ' },
+  { emoji: '🐢', name: 'walk', vi: 'đi bộ' },
+  { emoji: '🦆', name: 'walk', vi: 'đi bộ' },
+  { emoji: '🐘', name: 'walk', vi: 'đi bộ' },
+  { emoji: '🚶‍♂️🌧️', name: 'walk', vi: 'đi bộ' }, // walking in rain
+  { emoji: '🚶‍♂️🧳', name: 'walk', vi: 'đi bộ' }, // walking with luggage
+]
+
+function randomItem(list) {
+  return list[Math.floor(Math.random() * list.length)]
 }
 
 export default function RunWalkGame({
   onBack,
   addStar,
+  difficulty,
+  completeGame,
 }: {
   onBack: () => void
   addStar: () => void
+  difficulty: string
+  completeGame: (
+    gameName: string
+  ) => void
 }) {
+  const items =  difficulty === 'easy' ? easyItems : difficulty === 'medium' ? mediumItems : hardItems
+  
   const [item, setItem] =
-    useState(randomItem())
+    useState(randomItem(items))
 
   const [score, setScore] =
     useState(0)
@@ -80,17 +93,10 @@ export default function RunWalkGame({
   speakLines()
 }, [item])
 
-  const nextRound = () => {
-  let newItem = randomItem()
-
-  while (
-    newItem.emoji === item.emoji
-  ) {
-    newItem = randomItem()
-  }
-
-  setItem(newItem)
+    const nextRound = () => {
+  setItem(randomItem(items))
 }
+
 
   const praises = ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!']
   const randomPraise = () => praises[Math.floor(Math.random() * praises.length)]
@@ -106,8 +112,6 @@ export default function RunWalkGame({
 	  setIsLocked(true)
       addStar()
 
-      setScore((prev) => prev + 1)
-
      const newStreak = streak + 1
 
 	setStreak(newStreak)
@@ -119,6 +123,13 @@ export default function RunWalkGame({
 
       // Speak Vietnamese praise
       await speak(`${randomPraiseVN()} ${item.vi}!`, 'vi-VN')
+	   const newScore = score + 1
+
+setScore(newScore)
+
+if (newScore >= 5) {
+  completeGame('RunWalkGame')
+}
 
 if (streak === 2) {
   speak('Amazing streak!')

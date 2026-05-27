@@ -3,62 +3,73 @@ import { nextButton, speakButton, emojiButton } from '../utils/gameStyles'
 import { speak } from '../utils/speak'
 import { playCorrect, playWrong } from '../utils/sounds'
 
+const easyItems = [
+  // SLOW
+  { emoji: '🐢', name: 'slow', vi: 'chậm' },
+  { emoji: '🐌', name: 'slow', vi: 'chậm' },
+  { emoji: '🚶', name: 'slow', vi: 'chậm' },
 
-const items = [
-  {
-    emoji: '🐢',
-    name: 'slow',
-	vi: 'chậm',
-  },
+  // FAST
+  { emoji: '🏎️', name: 'fast', vi: 'nhanh' },
+  { emoji: '🐆', name: 'fast', vi: 'nhanh' },
+  { emoji: '🚀', name: 'fast', vi: 'nhanh' },
+]
+const mediumItems = [
+  // SLOW
+  { emoji: '🐢', name: 'slow', vi: 'chậm' },
+  { emoji: '🐌', name: 'slow', vi: 'chậm' },
+  { emoji: '🚶', name: 'slow', vi: 'chậm' },
+  { emoji: '🦥', name: 'slow', vi: 'chậm' },   // sloth
+  { emoji: '🚜', name: 'slow', vi: 'chậm' },   // slow tractor
 
-  {
-    emoji: '🐌',
-    name: 'slow',
-	vi: 'chậm',
-  },
+  // FAST
+  { emoji: '🏎️', name: 'fast', vi: 'nhanh' },
+  { emoji: '🐆', name: 'fast', vi: 'nhanh' },
+  { emoji: '🚀', name: 'fast', vi: 'nhanh' },
+  { emoji: '✈️', name: 'fast', vi: 'nhanh' },  // airplane
+  { emoji: '🏃‍♂️', name: 'fast', vi: 'nhanh' }, // running
+]
+const hardItems = [
+  // SLOW
+  { emoji: '🐢', name: 'slow', vi: 'chậm' },
+  { emoji: '🐌', name: 'slow', vi: 'chậm' },
+  { emoji: '🚶', name: 'slow', vi: 'chậm' },
+  { emoji: '🦥', name: 'slow', vi: 'chậm' },
+  { emoji: '🚜', name: 'slow', vi: 'chậm' },
+  { emoji: '⏳', name: 'slow', vi: 'chậm' },   // hourglass
+  { emoji: '🐘', name: 'slow', vi: 'chậm' },   // big animals move slower
 
-  {
-    emoji: '🚶',
-    name: 'slow',
-	vi: 'chậm',
-  },
-
-  {
-    emoji: '🏎️',
-    name: 'fast',
-	vi: 'nhanh',
-  },
-
-  {
-    emoji: '🐆',
-    name: 'fast',
-	vi: 'nhanh',
-  },
-
-  {
-    emoji: '🚀',
-    name: 'fast',
-	vi: 'nhanh',
-  },
+  // FAST
+  { emoji: '🏎️', name: 'fast', vi: 'nhanh' },
+  { emoji: '🐆', name: 'fast', vi: 'nhanh' },
+  { emoji: '🚀', name: 'fast', vi: 'nhanh' },
+  { emoji: '✈️', name: 'fast', vi: 'nhanh' },
+  { emoji: '🏃‍♂️', name: 'fast', vi: 'nhanh' },
+  { emoji: '⚡', name: 'fast', vi: 'nhanh' },   // lightning
+  { emoji: '💨', name: 'fast', vi: 'nhanh' },   // speed lines
 ]
 
-function randomItem() {
-  return items[
-    Math.floor(
-      Math.random() * items.length
-    )
-  ]
+function randomItem(list) {
+  return list[Math.floor(Math.random() * list.length)]
 }
 
 export default function FastSlowGame({
   onBack,
   addStar,
+  difficulty,
+  completeGame,
 }: {
   onBack: () => void
   addStar: () => void
+  difficulty: string
+  completeGame: (
+    gameName: string
+  ) => void
 }) {
+	 const items =  difficulty === 'easy' ? easyItems : difficulty === 'medium' ? mediumItems : hardItems
+  
   const [item, setItem] =
-    useState(randomItem())
+    useState(randomItem(items))
 
   const [score, setScore] =
     useState(0)
@@ -80,15 +91,7 @@ export default function FastSlowGame({
 }, [item])
 
  const nextRound = () => {
-  let newItem = randomItem()
-
-  while (
-    newItem.emoji === item.emoji
-  ) {
-    newItem = randomItem()
-  }
-
-  setItem(newItem)
+  setItem(randomItem(items))
 }
   
   const praises = ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!']
@@ -131,7 +134,13 @@ if (streak === 4) {
 if (streak === 9) {
   speak('Wow! Superstar!')
 }
+  	  const newScore = score + 1
 
+setScore(newScore)
+
+if (newScore >= 5) {
+  completeGame('FastSlowGame')
+}
      nextRound()
 
 setTimeout(() => {

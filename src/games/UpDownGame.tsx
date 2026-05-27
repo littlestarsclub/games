@@ -3,73 +3,73 @@ import { nextButton, speakButton, emojiButton } from '../utils/gameStyles'
 import { speak } from '../utils/speak'
 import { playCorrect, playWrong } from '../utils/sounds'
 
-const items = [
-  {
-    emoji: '🎈',
-    name: 'up',
-	vi: 'lên',
-  },
+const easyItems = [
+  { emoji: '🎈', name: 'up', vi: 'lên' },
+  { emoji: '🪁', name: 'up', vi: 'lên' },
+  { emoji: '🚀', name: 'up', vi: 'lên' },
 
-  {
-    emoji: '🪁',
-    name: 'up',
-	vi: 'lên',
-  },
+  { emoji: '⬇️', name: 'down', vi: 'xuống' },
+  { emoji: '⚓', name: 'down', vi: 'xuống' },
+  { emoji: '🪨', name: 'down', vi: 'xuống' },
+]
+const mediumItems = [
+  // UP
+  { emoji: '🎈', name: 'up', vi: 'lên' },
+  { emoji: '🪁', name: 'up', vi: 'lên' },
+  { emoji: '🚀', name: 'up', vi: 'lên' },
+  { emoji: '🕊️', name: 'up', vi: 'lên' },   // bird flying up
+  { emoji: '🌤️', name: 'up', vi: 'lên' },  // sun rising
 
-  {
-    emoji: '🚀',
-    name: 'up',
-	vi: 'lên',
-  },
+  // DOWN
+  { emoji: '⬇️', name: 'down', vi: 'xuống' },
+  { emoji: '⚓', name: 'down', vi: 'xuống' },
+  { emoji: '🪨', name: 'down', vi: 'xuống' },
+  { emoji: '🌧️', name: 'down', vi: 'xuống' }, // rain falling
+  { emoji: '🍂', name: 'down', vi: 'xuống' }, // leaf falling
+]
+const hardItems = [
+  // UP
+  { emoji: '🎈', name: 'up', vi: 'lên' },
+  { emoji: '🪁', name: 'up', vi: 'lên' },
+  { emoji: '🚀', name: 'up', vi: 'lên' },
+  { emoji: '🕊️', name: 'up', vi: 'lên' },
+  { emoji: '🌤️', name: 'up', vi: 'lên' },
+  { emoji: '📈', name: 'up', vi: 'lên' },   // chart going up
+  { emoji: '🎵', name: 'up', vi: 'lên' },   // pitch going up
 
-  {
-    emoji: '⬇️',
-    name: 'down',
-	vi: 'xuống',
-  },
-
-  {
-    emoji: '🪨',
-    name: 'down',
-	vi: 'xuống',
-  },
-
-  {
-    emoji: '⚓',
-    name: 'down',
-	vi: 'xuống',
-  },
+  // DOWN
+  { emoji: '⬇️', name: 'down', vi: 'xuống' },
+  { emoji: '⚓', name: 'down', vi: 'xuống' },
+  { emoji: '🪨', name: 'down', vi: 'xuống' },
+  { emoji: '🌧️', name: 'down', vi: 'xuống' },
+  { emoji: '🍂', name: 'down', vi: 'xuống' },
+  { emoji: '📉', name: 'down', vi: 'xuống' }, // chart going down
+  { emoji: '🥀', name: 'down', vi: 'xuống' }, // flower drooping
 ]
 
-function randomItem() {
-  return items[
-    Math.floor(
-      Math.random() * items.length
-    )
-  ]
+function randomItem(list) {
+  return list[Math.floor(Math.random() * list.length)]
 }
 
 export default function UpDownGame({
   onBack,
   addStar,
+  difficulty,
+  completeGame,
 }: {
   onBack: () => void
   addStar: () => void
+  difficulty: string
+  completeGame: (
+    gameName: string
+  ) => void
 }) {
-  const [item, setItem] =
-    useState(randomItem())
-
-  const [score, setScore] =
-    useState(0)
-
-  const [streak, setStreak] =
-    useState(0)
-
-  const [showCelebrate, setShowCelebrate] =
-    useState(false)
-	
-	const [isLocked, setIsLocked] =
-  useState(false)
+  const items =  difficulty === 'easy' ? easyItems : difficulty === 'medium' ? mediumItems : hardItems
+  const [item, setItem] =  useState(randomItem(items))
+  const [score, setScore] =   useState(0)
+  const [streak, setStreak] =  useState(0)
+  const [showCelebrate, setShowCelebrate] =   useState(false)
+  const [isLocked, setIsLocked] =  useState(false)
 
   useEffect(() => {
   const speakLineEn = async () => {
@@ -83,9 +83,9 @@ export default function UpDownGame({
 }, [item])
 
 
-  const nextRound = () => {
-    setItem(randomItem())
-  }
+ const nextRound = () => {
+  setItem(randomItem(items))
+}
 
   const praises = ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!']
   const randomPraise = () => praises[Math.floor(Math.random() * praises.length)]
@@ -100,8 +100,6 @@ export default function UpDownGame({
 	  playCorrect()
 	  setIsLocked(true)
       addStar()
-
-      setScore((prev) => prev + 1)
 
       setStreak((prev) => prev + 1)
 
@@ -131,6 +129,13 @@ export default function UpDownGame({
           'Wow! Superstar!'
         )
       }
+	  const newScore = score + 1
+
+setScore(newScore)
+
+if (newScore >= 5) {
+  completeGame('UpDownGame')
+}
 
       setTimeout(() => {
   setShowCelebrate(false)

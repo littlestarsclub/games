@@ -2,43 +2,71 @@ import { useEffect, useState } from 'react'
 import { speak } from '../utils/speak'
 import { playCorrect, playWrong } from '../utils/sounds'
 import { nextButton, speakButton, emojiButton } from '../utils/gameStyles'
+import { useGameLock } from '../utils/useGameLock'
+
+const easyRange = { min: 1, max: 5 }
+const mediumRange = { min: 1, max: 10 }
+const hardRange = { min: 1, max: 20 }
 
 export default function TentacleCountGame({
   onBack,
   addStar,
+  difficulty,
+  completeGame,
 }: {
   onBack: () => void
   addStar: () => void
+  difficulty: string
+  completeGame: (
+    gameName: string
+  ) => void
 }) {
+const range =
+  difficulty === 'easy'
+    ? easyRange
+    : difficulty === 'medium'
+    ? mediumRange
+    : hardRange
+
   const [tentacles, setTentacles] = useState(1)
   const [choices, setChoices] = useState<number[]>([])
   const [score, setScore] = useState(0)
   const [showCelebrate, setShowCelebrate] = useState(false)
   const [streak, setStreak] =  useState(0)
-  const [isLocked, setIsLocked] =   useState(false)
+  const {isLocked,  setIsLocked, isSpeaking, setIsSpeaking, disableUI, } = useGameLock()
+  
 
   useEffect(() => {
     nextRound()
-  }, [])
+  }, [difficulty])
 
   const nextRound = () => {
-    // Octopuses can have 1–8 tentacles in this game
-    const newCount = Math.floor(Math.random() * 8) + 1
-    setTentacles(newCount)
+	  if (isLocked) return
+  // Pick a random tentacle count based on difficulty
+  const newCount =
+    Math.floor(Math.random() * (range.max - range.min + 1)) + range.min
 
-    let wrong = []
-    while (wrong.length < 2) {
-      const n = Math.floor(Math.random() * 8) + 1
-      if (n !== newCount && !wrong.includes(n)) wrong.push(n)
-    }
+  setTentacles(newCount)
 
-    const allChoices = [...wrong, newCount].sort(() => Math.random() - 0.5)
-    setChoices(allChoices)
+  // Generate 4 wrong answers
+  const wrong = new Set<number>()
+  while (wrong.size < 4) {
+    const n =
+      Math.floor(Math.random() * (range.max - range.min + 1)) + range.min
+    if (n !== newCount) wrong.add(n)
   }
 
+  // Combine and shuffle
+  const allChoices = [...wrong, newCount].sort(() => Math.random() - 0.5)
+  setChoices(allChoices)
+}
+
+
   const speakQuestion = async () => {
+	  if (disableUI) return
     await speak(`How many tentacles does the octopus have?`)
     await speak(`Con bạch tuộc có bao nhiêu cái tua?`, 'vi-VN')
+	setIsSpeaking(false)
   }
 
   const praises = ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!']
@@ -56,7 +84,6 @@ export default function TentacleCountGame({
 	  if (streak === 9) {speak('WOW! Superstar!')}
       addStar()
 	  setStreak((prev) => prev + 1)
-      setScore(prev => prev + 1)
       setShowCelebrate(true)
 
      // Speak English praise
@@ -64,7 +91,13 @@ export default function TentacleCountGame({
 
       // Speak Vietnamese praise
       await speak(`${randomPraiseVN()} ${choice}!`, 'vi-VN')
+const newScore = score + 1
 
+setScore(newScore)
+
+if (newScore >= 5) {
+  completeGame('TentacleCountGame')
+}
       setTimeout(() => {
   setShowCelebrate(false)
 
@@ -161,11 +194,19 @@ export default function TentacleCountGame({
         ))}
       </div>
 
-      <button onClick={speakQuestion} style={speakButton}>
+      <button disabled={disableUI} onClick={speakQuestion}  style={{
+    ...speakButton,
+    opacity:
+      isLocked || isSpeaking ? 0.5 : 1,
+  }}>
         🔊 Hear Question
       </button>
 
-      <button onClick={nextRound} style={nextButton}>
+      <button disabled={isLocked || isSpeaking} onClick={nextRound} style={{
+    ...nextButton,
+    opacity:
+      isLocked || isSpeaking ? 0.5 : 1,
+  }}>
         ➡️ Next
       </button>
     </>
