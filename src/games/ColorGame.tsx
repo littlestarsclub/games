@@ -120,7 +120,7 @@ export default function ColorGame({
   const [score, setScore] = useState(0)
   const [showCelebrate, setShowCelebrate] = useState(false)
   const [streak, setStreak] =  useState(0)
-  const {isLocked,  setIsLocked, isSpeaking, setIsSpeaking, disableUI, } = useGameLock()
+ 	const {isLocked, setIsLocked, isSpeaking, disableUI, } = useGameLock()
   
 
 useEffect(() => {
@@ -129,7 +129,7 @@ useEffect(() => {
 
 
 const nextRound = () => {
-  if (isLocked) return
+  if (disableUI) return
 
   let randomColor =
     items[Math.floor(Math.random() * items.length)]
@@ -146,7 +146,7 @@ const nextRound = () => {
 		if (disableUI) return
 		await speak(`Can you find ${target.name}?`)
 		await speak(`Bạn có thể tìm thấy ${target.vietnamese} không?`, 'vi-VN')
-		setIsSpeaking(false)
+	
 	}
 
 const praises = [
@@ -166,7 +166,7 @@ const randomPraise = () => {
  const randomPraiseVN = () => praisesVN[Math.floor(Math.random() * praisesVN.length)]
  
   const handleClick = async(name: string) => {
-	  if (isLocked) return
+	  if (disableUI) return
     if (name === target.name) {
 
       playCorrect()
@@ -184,17 +184,18 @@ if (streak === 9) {
 }
 	  addStar()
 	  setStreak((prev) => prev + 1)
-	  setShowCelebrate(true)
-	  
-      await speak(`${randomPraise()} ${name}!`)
-	  await speak(`${randomPraiseVN()} ${target.vietnamese}!`, 'vi-VN')
-      const newScore = score + 1
+	        const newScore = score + 1
 
 setScore(newScore)
 
 if (newScore >= 5) {
   completeGame('color')
 }
+	  setShowCelebrate(true)
+	  
+      await speak(`${randomPraise()} ${name}!`)
+	  await speak(`${randomPraiseVN()} ${target.vietnamese}!`, 'vi-VN')
+
      setTimeout(() => {
   setShowCelebrate(false)
 
@@ -290,8 +291,7 @@ if (newScore >= 5) {
         onClick={speakQuestion}
         style={{
     ...speakButton,
-    opacity:
-      isLocked || isSpeaking ? 0.5 : 1,
+    opacity: disableUI ? 0.5 : 1
   }}
       >
         🔊 Hear the Question
@@ -302,8 +302,7 @@ if (newScore >= 5) {
         onClick={nextRound}
         style={{
     ...nextButton,
-    opacity:
-      isLocked || isSpeaking ? 0.5 : 1,
+    opacity: disableUI ? 0.5 : 1
   }}
       >
         ➡️ Next Question

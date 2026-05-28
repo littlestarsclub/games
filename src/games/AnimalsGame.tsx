@@ -69,7 +69,7 @@ export default function AnimalsGame({
   const [score, setScore] = useState(0)
   const [showCelebrate, setShowCelebrate] = useState(false)
   const [streak, setStreak] =  useState(0)
-  const {isLocked,  setIsLocked, isSpeaking, setIsSpeaking, disableUI, } = useGameLock()
+ 	const {isLocked, setIsLocked, isSpeaking, disableUI, } = useGameLock()
   
 
   useEffect(() => {
@@ -77,7 +77,7 @@ export default function AnimalsGame({
   }, [difficulty])
 
  const nextRound = () => {
-  if (isLocked) return
+  if (disableUI) return
   const randomAnimal = animals[Math.floor(Math.random() * animals.length)]
   setTarget(randomAnimal)
 
@@ -108,7 +108,6 @@ export default function AnimalsGame({
 
   const speakQuestion = async () => {
 	if (disableUI) return
-		setIsSpeaking(true)
     if (direction === 'enToVi') {
       await speak(`What is the Vietnamese word for`)
       await speak(`Từ tiếng Việt là gì?`, 'vi-VN')
@@ -118,7 +117,7 @@ export default function AnimalsGame({
       await speak(`Từ tiếng Anh là gì?`, 'vi-VN')
 	  await speak(`${target.vi}`, 'vi-VN')
     }
-	setIsSpeaking(false)
+
   }
 
   const praises = ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!']
@@ -128,7 +127,7 @@ export default function AnimalsGame({
   const randomPraiseVN = () => praisesVN[Math.floor(Math.random() * praisesVN.length)]
 
   const handleClick = async(choice: typeof animals[0]) => {
-	 if (isLocked) return
+	 if (disableUI) return
     const correct =
       direction === 'enToVi'
         ? choice.vi === target.vi
@@ -142,23 +141,19 @@ export default function AnimalsGame({
 	  if (streak === 9) {speak('WOW! Superstar!')}
       addStar()
 	  setStreak((prev) => prev + 1)
+	  const newScore = score + 1
+	  setScore(newScore)
+	  if (newScore >= 5) { completeGame('AnimalsGame') }
       setShowCelebrate(true)
-
       const word = direction === 'enToVi' ? target.vi : target.en
       const lang = direction === 'enToVi' ? 'vi-VN' : 'en-US'
 
       if (lang === 'en-US') speak(`${randomPraise()} ${word}!`)
 	  if (lang === 'vi-VN') speak(`${randomPraiseVN()} ${word}!`, 'vi-VN')
 
-      const newScore = score + 1
+	  setTimeout(() => { setShowCelebrate(false)
 
-	  setScore(newScore)
-
-	  if (newScore >= 5) { completeGame('AnimalsGame') }
-	  setTimeout(() => {
-  setShowCelebrate(false)
-
-  nextRound()
+	nextRound()
 
   setIsLocked(false)
 }, 2000)
@@ -235,16 +230,14 @@ export default function AnimalsGame({
       <button disabled={isLocked || isSpeaking}
 	  onClick={speakQuestion} style={{
     ...speakButton,
-    opacity:
-      isLocked || isSpeaking ? 0.5 : 1,
+    opacity: disableUI ? 0.5 : 1
   }}>
         🔊 Hear Question
       </button>
 
       <button disabled={isLocked || isSpeaking} onClick={nextRound} style={{
     ...nextButton,
-    opacity:
-      isLocked || isSpeaking ? 0.5 : 1,
+    opacity: disableUI ? 0.5 : 1
   }}>
         ➡️ Next
       </button>

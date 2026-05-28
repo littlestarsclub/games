@@ -47,14 +47,14 @@ export default function AppleGame({
   const [score, setScore] = useState(0)
   const [showCelebrate, setShowCelebrate] = useState(false)
   const [streak, setStreak] =  useState(0)
-  const {isLocked,  setIsLocked, isSpeaking, setIsSpeaking, disableUI, } = useGameLock()
+ 	const {isLocked, setIsLocked, isSpeaking, disableUI, } = useGameLock()
   
   useEffect(() => {
     nextRound()
   }, [difficulty])
 
   const nextRound = () => {
-  if (isLocked) return
+  if (disableUI) return
 
   let randomItem =
     items[Math.floor(Math.random() * items.length)]
@@ -67,13 +67,11 @@ export default function AppleGame({
   setTarget(randomItem)
 }
 
-	const speakQuestion = async () => {
-		if (disableUI) return
-		setIsSpeaking(true)
-		await speak(`Can you find ${target.name}?`)
-		await speak(`Bạn có thể tìm thấy ${target.vietnamese} không?`, 'vi-VN')
-		setIsSpeaking(false)
-	}
+const speakQuestion = async () => {
+  if (disableUI) return
+  await speak(`Can you find ${target.name}?`)
+  await speak(`Bạn có thể tìm thấy ${target.vietnamese} không?`, 'vi-VN')
+}
 
 const praises = [
   'Amazing!',
@@ -88,7 +86,7 @@ const randomPraise = () => {return praises[ Math.floor(Math.random() * praises.l
  const randomPraiseVN = () => praisesVN[Math.floor(Math.random() * praisesVN.length)]
  
   const handleClick = async( item: typeof items[0]) => {
-	  if (isLocked) return
+	  if (disableUI) return
     if (item.name === target.name) {
       playCorrect()
 	  setIsLocked(true)
@@ -105,16 +103,14 @@ if (streak === 9) {
 }
 	  addStar()
 	  setStreak((prev) => prev + 1)
+	        const newScore = score + 1
+		setScore(newScore)
+		if (newScore >= 5) {
+	completeGame('apple')}
 	  setShowCelebrate(true)
       await speak(`${randomPraise()} ${item.name}!`)
 	  await speak(`${randomPraiseVN()} ${item.vietnamese}!`, 'vi-VN')
-      const newScore = score + 1
 
-setScore(newScore)
-
-if (newScore >= 5) {
-  completeGame('apple')
-}
       setTimeout(() => {
   setShowCelebrate(false)
 
@@ -191,7 +187,7 @@ if (newScore >= 5) {
         {items.map((item) => (
           <button
             key={item.name}
-			disabled={disableUI}
+			disabled={isLocked}
             onClick={() => handleClick(item)}
             style={gameButton}
           >
@@ -205,20 +201,18 @@ if (newScore >= 5) {
         onClick={speakQuestion}
         style={{
     ...speakButton,
-    opacity:
-      isLocked || isSpeaking ? 0.5 : 1,
+    opacity: disableUI ? 0.5 : 1
   }}
       >
         🔊 Hear the Question
       </button>
 
       <button
-	    disabled={isLocked || isSpeaking}
+	    disabled={disableUI}
         onClick={nextRound}
         style={{
     ...nextButton,
-    opacity:
-      isLocked || isSpeaking ? 0.5 : 1,
+    opacity: disableUI ? 0.5 : 1
   }}
       >
         ➡️ Next Question

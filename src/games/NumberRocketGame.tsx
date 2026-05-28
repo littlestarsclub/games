@@ -29,7 +29,7 @@ export default function NumberRocketGame({
   const [score, setScore] = useState(0)
   const [showCelebrate, setShowCelebrate] = useState(false)
   const [streak, setStreak] =  useState(0)
-  const {isLocked,  setIsLocked, isSpeaking, setIsSpeaking, disableUI, } = useGameLock()
+ 	const {isLocked, setIsLocked, isSpeaking, disableUI, } = useGameLock()
   
 
   useEffect(() => {
@@ -37,7 +37,7 @@ export default function NumberRocketGame({
   }, [difficulty])
 
  const nextRound = () => {
-	 if (isLocked) return
+	 if (disableUI) return
 
   // Pick random rockets for A and B based on difficulty
   const a = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min
@@ -65,7 +65,7 @@ export default function NumberRocketGame({
 	  if (disableUI) return
     await speak(`How many rockets are there?`)
     await speak(`Có bao nhiêu tên lửa?`, 'vi-VN')
-	setIsSpeaking(false)
+
   }
 
   const praises = ['Blast off!', 'Amazing!', 'Great job!', 'Awesome!', 'Yay!']
@@ -74,7 +74,7 @@ export default function NumberRocketGame({
   const randomPraiseVN = () => praisesVN[Math.floor(Math.random() * praisesVN.length)]
 
 const handleClick = async (choice: number) => {
-	if (isLocked) return
+	if (disableUI) return
   if (choice === answer) {
     playCorrect()
 	setIsLocked(true)
@@ -83,6 +83,13 @@ const handleClick = async (choice: number) => {
 	if (streak === 9) {speak('WOW! Superstar!')}
     addStar()
 	setStreak((prev) => prev + 1)
+	const newScore = score + 1
+
+setScore(newScore)
+
+if (newScore >= 5) {
+  completeGame('NumberRocketGame')
+}
     setShowCelebrate(true)
 
     // Speak English praise
@@ -90,13 +97,7 @@ const handleClick = async (choice: number) => {
 
     // Speak Vietnamese praise
     await speak(`${randomPraiseVN()} ${choice}!`, 'vi-VN')
-const newScore = score + 1
 
-setScore(newScore)
-
-if (newScore >= 5) {
-  completeGame('NumberRocketGame')
-}
    setTimeout(() => {
   setShowCelebrate(false)
 
@@ -186,16 +187,14 @@ if (newScore >= 5) {
 
       <button disabled={disableUI} onClick={speakQuestion}  style={{
     ...speakButton,
-    opacity:
-      isLocked || isSpeaking ? 0.5 : 1,
+    opacity: disableUI ? 0.5 : 1
   }}>
         🔊 Hear Question
       </button>
 
       <button disabled={isLocked || isSpeaking} onClick={nextRound} style={{
     ...nextButton,
-    opacity:
-      isLocked || isSpeaking ? 0.5 : 1,
+    opacity: disableUI ? 0.5 : 1
   }}>
         ➡️ Next
       </button>

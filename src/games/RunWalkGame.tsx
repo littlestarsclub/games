@@ -110,28 +110,7 @@ export default function RunWalkGame({
     if (answer === item.name) {
 	  playCorrect()
 	  setIsLocked(true)
-      addStar()
-
-     const newStreak = streak + 1
-
-	setStreak(newStreak)
-
-      setShowCelebrate(true)
-
-      // Speak English praise
-      await speak(`${randomPraise()} ${item.name}!`)
-
-      // Speak Vietnamese praise
-      await speak(`${randomPraiseVN()} ${item.vi}!`, 'vi-VN')
-	   const newScore = score + 1
-
-setScore(newScore)
-
-if (newScore >= 5) {
-  completeGame('RunWalkGame')
-}
-
-if (streak === 2) {
+	  if (streak === 2) {
   speak('Amazing streak!')
 }
 
@@ -143,7 +122,25 @@ if (streak === 9) {
   speak('Wow! Superstar!')
 }
 
-     nextRound()
+      addStar()
+	  setStreak((prev) => prev + 1)
+	  	const newScore = score + 1
+
+setScore(newScore)
+	
+if (newScore >= 5) {
+  completeGame('RunWalkGame')
+}
+
+     
+
+      setShowCelebrate(true)
+      // Speak English praise
+      await speak(`${randomPraise()} ${item.name}!`)
+      // Speak Vietnamese praise
+      await speak(`${randomPraiseVN()} ${item.vi}!`, 'vi-VN')
+
+		nextRound()
 
 setTimeout(() => {
   setShowCelebrate(false)

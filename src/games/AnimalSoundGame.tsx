@@ -3,6 +3,7 @@ import { speak } from '../utils/speak'
 import { playCorrect, playWrong } from '../utils/sounds'
 import { nextButton, speakButton, emojiButton } from '../utils/gameStyles'
 import { useGameLock } from '../utils/useGameLock'
+import { playGameAudio } from '../utils/playGameAudio'
 
 const easyItems  = [
   {
@@ -170,7 +171,7 @@ const {isLocked,  setIsLocked, isSpeaking, setIsSpeaking, disableUI, } = useGame
   }, [difficulty])
 
 const nextRound = () => {
-  if (isLocked) return
+  if (disableUI) return
   const randomAnimal = animals[Math.floor(Math.random() * animals.length)]
   setTarget(randomAnimal)
 
@@ -197,39 +198,28 @@ const nextRound = () => {
 const playSound = async () => {
   if (disableUI) return
 
-  setIsSpeaking(true)
-
-  const audio = new Audio(
-    `sounds/${target.soundFile}`
-  )
-
-  audio.onended = () => {
-    setIsSpeaking(false)
-  }
-
-  await audio.play()
+  await playGameAudio({
+    soundFile: target.soundFile,
+    setIsSpeaking,
+  })
 }
 
-  const speakQuestion = async () => {
+const speakQuestion = async () => {
   if (disableUI) return
 
-  setIsSpeaking(true)
+  await playGameAudio({
+    speech: [
+      'Which animal makes this sound?'
+    ],
 
-  await speak('Which animal makes this sound?')
-  await speak(
-    'Con vật nào tạo ra âm thanh này?',
-    'vi-VN'
-  )
+    vietnamese: [
+      'Con vật nào tạo ra âm thanh này?'
+    ],
 
-  const audio = new Audio(
-    `sounds/${target.soundFile}`
-  )
+    soundFile: target.soundFile,
 
-  audio.onended = () => {
-    setIsSpeaking(false)
-  }
-
-  await audio.play()
+    setIsSpeaking,
+  })
 }
 
   const praises = ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!']
@@ -239,7 +229,7 @@ const playSound = async () => {
   const randomPraiseVN = () => praisesVN[Math.floor(Math.random() * praisesVN.length)]
   
   const handleClick = async (animal: typeof animals[0]) => {
-	  if (isLocked) return
+	  if (disableUI) return
     if (animal.name === target.name) {
       playCorrect()
 	  setIsLocked(true)
@@ -248,17 +238,12 @@ const playSound = async () => {
 	  if (streak === 9) {speak('WOW! Superstar!')}
       addStar()
 	  setStreak((prev) => prev + 1)
+	  const newScore = score + 1
+	  setScore(newScore)
+	  if (newScore >= 5) {completeGame('animalSound')}
       setShowCelebrate(true)
       await speak(`${randomPraise()} ${animal.name}!`)
 	  await speak(`${randomPraiseVN()} ${animal.vi}!`, 'vi-VN')
-
-	  const newScore = score + 1
-
-setScore(newScore)
-
-if (newScore >= 5) {
-  completeGame('animalSound')
-}
       setTimeout(() => {
   setShowCelebrate(false)
 
@@ -311,8 +296,7 @@ if (newScore >= 5) {
 
       <button disabled={disableUI} onClick={playSound} style={{
     ...speakButton,
-    opacity:
-      isLocked || isSpeaking ? 0.5 : 1,
+    opacity: disableUI ? 0.5 : 1
   }}>
         🔊 Play Sound
       </button>
@@ -340,16 +324,14 @@ if (newScore >= 5) {
 
       <button disabled={disableUI} onClick={speakQuestion}  style={{
     ...speakButton,
-    opacity:
-      isLocked || isSpeaking ? 0.5 : 1,
+    opacity: disableUI ? 0.5 : 1
   }}>
         🔊 Hear Question
       </button>
 
       <button disabled={isLocked || isSpeaking} onClick={nextRound} style={{
     ...nextButton,
-    opacity:
-      isLocked || isSpeaking ? 0.5 : 1,
+    opacity: disableUI ? 0.5 : 1
   }}>
         ➡️ Next
       </button>

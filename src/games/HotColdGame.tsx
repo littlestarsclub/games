@@ -108,10 +108,14 @@ export default function HotColdGame({
 	  playCorrect()
 	  setIsLocked(true)
       addStar()
-
-      setScore((prev) => prev + 1)
-
       setStreak((prev) => prev + 1)
+	  const newScore = score + 1
+
+setScore(newScore)
+
+if (newScore >= 5) {
+  completeGame('HotColdGame')
+}
 
       setShowCelebrate(true)
 
@@ -132,13 +136,7 @@ export default function HotColdGame({
           'Super learner!'
         )
       }
-const newScore = score + 1
 
-setScore(newScore)
-
-if (newScore >= 5) {
-  completeGame('HotColdGame')
-}
       setTimeout(() => {
   setShowCelebrate(false)
 

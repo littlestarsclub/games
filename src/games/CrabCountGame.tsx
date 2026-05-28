@@ -27,7 +27,7 @@ export default function CrabCountGame({
   const [score, setScore] = useState(0)
   const [showCelebrate, setShowCelebrate] = useState(false)
   const [streak, setStreak] =  useState(0)
-  const {isLocked,  setIsLocked, isSpeaking, setIsSpeaking, disableUI, } = useGameLock()
+ 	const {isLocked, setIsLocked, isSpeaking, disableUI, } = useGameLock()
  
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export default function CrabCountGame({
   }, [difficulty])
 
  const nextRound = () => {
-	 if (isLocked) return
+	 if (disableUI) return
   // Pick a random crab count based on difficulty
   const newCount =
     Math.floor(Math.random() * (range.max - range.min + 1)) + range.min
@@ -60,7 +60,7 @@ export default function CrabCountGame({
 	  if (disableUI) return
     await speak(`How many crabs do you see?`)
     await speak(`Có bao nhiêu con cua?`, 'vi-VN')
-	setIsSpeaking(false)
+
   }
 
   const praises = ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!']
@@ -69,7 +69,7 @@ export default function CrabCountGame({
   const randomPraiseVN = () => praisesVN[Math.floor(Math.random() * praisesVN.length)]
  
   const handleClick = async (choice: number) => {
-	  if (isLocked) return
+	  if (disableUI) return
     if (choice === count) {
       playCorrect()
 	  setIsLocked(true)
@@ -78,6 +78,13 @@ export default function CrabCountGame({
 	  if (streak === 9) {speak('WOW! Superstar!')}
       addStar()
 	  setStreak((prev) => prev + 1)
+	  const newScore = score + 1
+
+setScore(newScore)
+
+if (newScore >= 5) {
+  completeGame('CrabCountGame')
+}
       setShowCelebrate(true)
 
 	  // Speak English praise
@@ -85,13 +92,7 @@ export default function CrabCountGame({
 
       // Speak Vietnamese praise
       await speak(`${randomPraiseVN()} ${choice}!`, 'vi-VN')
-const newScore = score + 1
 
-setScore(newScore)
-
-if (newScore >= 5) {
-  completeGame('CrabCountGame')
-}
       setTimeout(() => {
   setShowCelebrate(false)
 
@@ -189,16 +190,14 @@ if (newScore >= 5) {
 
       <button  disabled={disableUI} onClick={speakQuestion} style={{
     ...speakButton,
-    opacity:
-      isLocked || isSpeaking ? 0.5 : 1,
+    opacity: disableUI ? 0.5 : 1
   }}>
         🔊 Hear Question
       </button>
 
       <button disabled={isLocked || isSpeaking} onClick={nextRound} style={{
     ...nextButton,
-    opacity:
-      isLocked || isSpeaking ? 0.5 : 1,
+    opacity: disableUI ? 0.5 : 1
   }}>
         ➡️ Next
       </button>

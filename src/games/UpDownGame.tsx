@@ -99,9 +99,14 @@ export default function UpDownGame({
     if (answer === item.name) {
 	  playCorrect()
 	  setIsLocked(true)
-      addStar()
-
+	  if (streak === 2) {speak('Amazing streak!')}
+	  if (streak === 4) {speak('Super learner!')}
+	  if (streak === 9) {speak('WOW! Superstar!')}
+	  addStar()
       setStreak((prev) => prev + 1)
+	  const newScore = score + 1
+	  setScore(newScore)
+	  if (newScore >= 5) {completeGame('UpDownGame')}
 
       setShowCelebrate(true)
 
@@ -110,33 +115,7 @@ export default function UpDownGame({
 
       // Speak Vietnamese praise
       await speak(`${randomPraiseVN()} ${item.vi}!`, 'vi-VN')
-
-	  
-      if (streak === 2) {
-        speak(
-          'Amazing streak!'
-        )
-      }
-
-      if (streak === 4) {
-        speak(
-          'Super learner!'
-        )
-      }
-
-      if (streak === 9) {
-        speak(
-          'Wow! Superstar!'
-        )
-      }
-	  const newScore = score + 1
-
-setScore(newScore)
-
-if (newScore >= 5) {
-  completeGame('UpDownGame')
-}
-
+ 
       setTimeout(() => {
   setShowCelebrate(false)
 

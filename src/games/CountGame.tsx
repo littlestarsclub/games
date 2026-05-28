@@ -27,7 +27,7 @@ export default function CountGame({
   const [score, setScore] = useState(0)
   const [showCelebrate, setShowCelebrate] = useState(false)
   const [streak, setStreak] =  useState(0)
-  const {isLocked,  setIsLocked, isSpeaking, setIsSpeaking, disableUI, } = useGameLock()
+ 	const {isLocked, setIsLocked, isSpeaking, disableUI, } = useGameLock()
   const [answerButtons, setAnswerButtons] = useState<number[]>([])
 
   useEffect(() => {
@@ -49,7 +49,7 @@ function generateAnswerButtons(correct, range) {
 }
 
 const nextRound = () => {
-	if (isLocked) return
+	if (disableUI) return
   const randomCount =
     Math.floor(Math.random() * (range.max - range.min + 1)) + range.min
 
@@ -78,7 +78,7 @@ const randomPraise = () => {
   const randomPraiseVN = () => praisesVN[Math.floor(Math.random() * praisesVN.length)]
 
   const handleClick = async(num: number) => {
-	 if (isLocked) return
+	 if (disableUI) return
     if (num === count) {
       playCorrect()
 	  setIsLocked(true)
@@ -87,6 +87,13 @@ const randomPraise = () => {
 	  if (streak === 9) {speak('WOW! Superstar!')}
 	  addStar()
 	  setStreak((prev) => prev + 1)
+	  	 const newScore = score + 1
+
+setScore(newScore)
+
+if (newScore >= 5) {
+  completeGame('count')
+}
 	  setShowCelebrate(true)
 	  
 	  // Speak English praise
@@ -94,13 +101,7 @@ const randomPraise = () => {
 
       // Speak Vietnamese praise
       await speak(`${randomPraiseVN()} ${num}!`, 'vi-VN')
-	 const newScore = score + 1
 
-setScore(newScore)
-
-if (newScore >= 5) {
-  completeGame('count')
-}
       setTimeout(() => {
   setShowCelebrate(false)
 
@@ -122,7 +123,7 @@ if (newScore >= 5) {
 	  if (disableUI) return
     await speak('How many stars do you see?')
 	await speak('Có bao nhiêu ngôi sao?', 'vi-VN')
-	setIsSpeaking(false)
+
   }
 
   return (
@@ -201,8 +202,7 @@ if (newScore >= 5) {
         onClick={speakQuestion}
          style={{
     ...speakButton,
-    opacity:
-      isLocked || isSpeaking ? 0.5 : 1,
+    opacity: disableUI ? 0.5 : 1
   }}
       >
         🔊 Hear the Question
@@ -213,8 +213,7 @@ if (newScore >= 5) {
         onClick={nextRound}
         style={{
     ...nextButton,
-    opacity:
-      isLocked || isSpeaking ? 0.5 : 1,
+    opacity: disableUI ? 0.5 : 1
   }}
       >
         ➡️ Next Question

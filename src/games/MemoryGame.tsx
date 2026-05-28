@@ -102,19 +102,20 @@ const randomPraise = () => {return praises[ Math.floor(Math.random() * praises.l
 	    if (streak === 9) {speak('WOW! Superstar!')}
         addStar()
 		setStreak((prev) => prev + 1)
-        setMatched(prev => [...prev, i1, i2])
-        setShowCelebrate(true)
-
-	    await speak(`${randomPraise()} ${card1.en}!`)
-	    await speak(`${randomPraiseVN()} ${card1.vi}!`, 'vi-VN')
-	   
-	   const newScore = score + 1
+			   const newScore = score + 1
 
 setScore(newScore)
 
 if (newScore >= 5) {
   completeGame('memory')
 }
+        setMatched(prev => [...prev, i1, i2])
+        setShowCelebrate(true)
+
+	    await speak(`${randomPraise()} ${card1.en}!`)
+	    await speak(`${randomPraiseVN()} ${card1.vi}!`, 'vi-VN')
+	   
+
         setTimeout(() => setShowCelebrate(false), 1200)
       } else {
         playWrong()

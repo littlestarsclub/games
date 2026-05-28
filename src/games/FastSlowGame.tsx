@@ -109,11 +109,16 @@ export default function FastSlowGame({
 	  setIsLocked(true)
       addStar()
 
-      setScore((prev) => prev + 1)
-
       const newStreak = streak + 1
 
 	  setStreak(newStreak)
+	    	  const newScore = score + 1
+
+setScore(newScore)
+
+if (newScore >= 5) {
+  completeGame('FastSlowGame')
+}
 
       setShowCelebrate(true)
 
@@ -134,13 +139,7 @@ if (streak === 4) {
 if (streak === 9) {
   speak('Wow! Superstar!')
 }
-  	  const newScore = score + 1
 
-setScore(newScore)
-
-if (newScore >= 5) {
-  completeGame('FastSlowGame')
-}
      nextRound()
 
 setTimeout(() => {

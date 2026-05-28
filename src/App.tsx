@@ -643,7 +643,7 @@ const getProgress = (
   }}
 >
   <h3>
-    🎯 Difficulty
+    🎯 Difficulty (Độ khó)
   </h3>
 
   <div
@@ -668,7 +668,7 @@ const getProgress = (
             : '#dfe6e9',
       }}
     >
-      🟢 Easy
+      🟢 Easy (Dễ)
     </button>
 
     <button
@@ -686,7 +686,7 @@ const getProgress = (
             : '#dfe6e9',
       }}
     >
-      🟡 Medium
+      🟡 Medium (Trung bình)
     </button>
 
     <button
@@ -704,7 +704,7 @@ const getProgress = (
             : '#dfe6e9',
       }}
     >
-      🔴 Hard
+      🔴 Hard (Khó)
     </button>
   </div>
 </div>
