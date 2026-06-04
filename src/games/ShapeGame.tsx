@@ -152,7 +152,9 @@ export default function ShapeGame({
     randomItem =
       items[Math.floor(Math.random() * items.length)]
     }
+	  setTarget(randomItem)
   }
+
 
 const praises = [
   'Amazing!',

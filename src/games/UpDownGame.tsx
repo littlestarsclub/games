@@ -47,7 +47,7 @@ const hardItems = [
   { emoji: '🥀', name: 'down', vi: 'xuống' }, // flower drooping
 ]
 
-function randomItem(list) {
+function randomItem(list: string | any[]) {
   return list[Math.floor(Math.random() * list.length)]
 }
 
