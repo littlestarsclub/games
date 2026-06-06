@@ -1,206 +1,347 @@
 import { useEffect, useState } from 'react'
-import { speak } from '../utils/speak'
 import { playCorrect, playWrong } from '../utils/sounds'
 import { nextButton, speakButton, emojiButton } from '../utils/gameStyles'
 import { useGameLock } from '../utils/useGameLock'
+import { useLanguage } from '../context/LanguageContext'
+import { speakLocalized } from '../utils/speakLocalized'
 
-const easyItems = [
-  { emoji: '🐶', en: 'DOG', vi: 'CHÓ' },
-  { emoji: '🐱', en: 'CAT', vi: 'MÈO' },
-  { emoji: '🐮', en: 'COW', vi: 'BÒ' },
-  { emoji: '🐷', en: 'PIG', vi: 'HEO' },
-  { emoji: '🐵', en: 'MONKEY', vi: 'KHỈ' },
-  { emoji: '🦁', en: 'LION', vi: 'SƯ TỬ' },
-  { emoji: '🐯', en: 'TIGER', vi: 'HỔ' },
-  { emoji: '🐘', en: 'ELEPHANT', vi: 'VOI' },
+/* -------------------------------------------------------
+   20‑ANIMAL VOCABULARY SET
+------------------------------------------------------- */
+
+const animals = [
+  // Original 10
+  { emoji: '🐶', en: 'DOG', vi: 'CHÓ', zh: '狗' },
+  { emoji: '🐱', en: 'CAT', vi: 'MÈO', zh: '猫' },
+  { emoji: '🐭', en: 'MOUSE', vi: 'CHUỘT', zh: '老鼠' },
+  { emoji: '🐰', en: 'RABBIT', vi: 'THỎ', zh: '兔子' },
+  { emoji: '🐻', en: 'BEAR', vi: 'GẤU', zh: '熊' },
+  { emoji: '🦁', en: 'LION', vi: 'SƯ TỬ', zh: '狮子' },
+  { emoji: '🐯', en: 'TIGER', vi: 'HỔ', zh: '老虎' },
+  { emoji: '🐵', en: 'MONKEY', vi: 'KHỈ', zh: '猴子' },
+  { emoji: '🐼', en: 'PANDA', vi: 'GẤU TRÚC', zh: '熊猫' },
+  { emoji: '🐸', en: 'FROG', vi: 'ẾCH', zh: '青蛙' },
+
+  // Added 10
+  { emoji: '🐷', en: 'PIG', vi: 'HEO', zh: '猪' },
+  { emoji: '🐮', en: 'COW', vi: 'BÒ', zh: '牛' },
+  { emoji: '🐔', en: 'CHICKEN', vi: 'GÀ', zh: '鸡' },
+  { emoji: '🐤', en: 'CHICK', vi: 'GÀ CON', zh: '小鸡' },
+  { emoji: '🐙', en: 'OCTOPUS', vi: 'BẠCH TUỘC', zh: '章鱼' },
+  { emoji: '🐟', en: 'FISH', vi: 'CÁ', zh: '鱼' },
+  { emoji: '🐬', en: 'DOLPHIN', vi: 'CÁ HE0', zh: '海豚' },
+  { emoji: '🐳', en: 'WHALE', vi: 'CÁ VOI', zh: '鲸鱼' },
+  { emoji: '🐴', en: 'HORSE', vi: 'NGỰA', zh: '马' },
+  { emoji: '🐍', en: 'SNAKE', vi: 'RẮN', zh: '蛇' },
 ]
 
-const mediumItems = [
-  { emoji: '🐶', en: 'DOG', vi: 'CHÓ' },
-  { emoji: '🐱', en: 'CAT', vi: 'MÈO' },
-  { emoji: '🐮', en: 'COW', vi: 'BÒ' },
-  { emoji: '🐷', en: 'PIG', vi: 'HEO' },
-  { emoji: '🐵', en: 'MONKEY', vi: 'KHỈ' },
-  { emoji: '🦁', en: 'LION', vi: 'SƯ TỬ' },
-  { emoji: '🐯', en: 'TIGER', vi: 'HỔ' },
-  { emoji: '🐘', en: 'ELEPHANT', vi: 'VOI' },
-  { emoji: '🐰', en: 'RABBIT', vi: 'THỎ' },
-  { emoji: '🐻', en: 'BEAR', vi: 'GẤU' },
-  { emoji: '🐼', en: 'PANDA', vi: 'GẤU TRÚC' },
-  { emoji: '🦊', en: 'FOX', vi: 'CÁO' },
-]
+/* -------------------------------------------------------
+   UI TEXT
+------------------------------------------------------- */
 
-const hardItems = [
-{ emoji: '🐶', en: 'DOG', vi: 'CHÓ' },
-  { emoji: '🐱', en: 'CAT', vi: 'MÈO' },
-  { emoji: '🐮', en: 'COW', vi: 'BÒ' },
-  { emoji: '🐷', en: 'PIG', vi: 'HEO' },
-  { emoji: '🐵', en: 'MONKEY', vi: 'KHỈ' },
-  { emoji: '🦁', en: 'LION', vi: 'SƯ TỬ' },
-  { emoji: '🐯', en: 'TIGER', vi: 'HỔ' },
-  { emoji: '🐘', en: 'ELEPHANT', vi: 'VOI' },
-  { emoji: '🐰', en: 'RABBIT', vi: 'THỎ' },
-  { emoji: '🐻', en: 'BEAR', vi: 'GẤU' },
-  { emoji: '🐼', en: 'PANDA', vi: 'GẤU TRÚC' },
-  { emoji: '🦊', en: 'FOX', vi: 'CÁO' },
-  { emoji: '🐨', en: 'KOALA', vi: 'GẤU KOALA' },
-  { emoji: '🐸', en: 'FROG', vi: 'ẾCH' },
-  { emoji: '🐔', en: 'CHICKEN', vi: 'GÀ' },
-  { emoji: '🦆', en: 'DUCK', vi: 'VỊT' },
-]
+const titles = {
+  en: '🐾 Animal Game',
+  vi: '🐾 Trò chơi Động vật',
+  zh: '🐾 动物游戏',
+  'en-vi': '🐾 Animal Game — Trò chơi Động vật',
+  'en-zh': '🐾 Animal Game — 动物游戏',
+}
 
-export default function AnimalsGame({
+const uiText = {
+  back: {
+    en: '⬅ Back',
+    vi: '⬅ Quay lại',
+    zh: '⬅ 返回',
+    'en-vi': '⬅ Back / Quay lại',
+    'en-zh': '⬅ Back / 返回',
+  },
+
+  instruction: {
+    en: 'What animal is this?',
+    vi: 'Đây là con gì?',
+    zh: '这是什么动物？',
+    'en-vi': 'What animal is this? / Đây là con gì?',
+    'en-zh': 'What animal is this? / 这是什么动物？',
+  },
+
+  hearQuestion: {
+    en: '🔊 Hear Question',
+    vi: '🔊 Nghe câu hỏi',
+    zh: '🔊 听问题',
+    'en-vi': '🔊 Hear Question / Nghe câu hỏi',
+    'en-zh': '🔊 Hear Question / 听问题',
+  },
+
+  next: {
+    en: '➡️ Next',
+    vi: '➡️ Tiếp theo',
+    zh: '➡️ 下一题',
+    'en-vi': '➡️ Next / Tiếp theo',
+    'en-zh': '➡️ Next / 下一题',
+  },
+
+  score: {
+    en: '⭐ Score',
+    vi: '⭐ Điểm',
+    zh: '⭐ 分数',
+    'en-vi': '⭐ Score / Điểm',
+    'en-zh': '⭐ Score / 分数',
+  },
+
+  streak: {
+    en: '🔥 Streak',
+    vi: '🔥 Chuỗi đúng',
+    zh: '🔥 连续答对',
+    'en-vi': '🔥 Streak / Chuỗi đúng',
+    'en-zh': '🔥 Streak / 连续答对',
+  },
+
+  streakMessage: {
+    en: '🔥 Amazing Streak!',
+    vi: '🔥 Chuỗi đúng tuyệt vời!',
+    zh: '🔥 惊人的连胜！',
+    'en-vi': '🔥 Amazing Streak! / Chuỗi đúng tuyệt vời!',
+    'en-zh': '🔥 Amazing Streak! / 惊人的连胜！',
+  },
+
+  streakSpeech: {
+    streak2: { en: 'Amazing streak!', vi: 'Chuỗi đúng tuyệt vời!', zh: '惊人的连胜！' },
+    streak4: { en: 'Super learner!', vi: 'Siêu học sinh!', zh: '超级学习者！' },
+    streak9: { en: 'WOW! Superstar!', vi: 'WOW! Siêu sao!', zh: '哇！超级明星！' },
+  },
+
+  praise: {
+    en: ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!'],
+    vi: ['Tuyệt vời!', 'Giỏi lắm!', 'Xuất sắc!', 'Hay quá!', 'Yeah!'],
+    zh: ['太棒了！', '太精彩了！', '干得好！', '厉害！', '耶！'],
+  },
+}
+
+/* -------------------------------------------------------
+   COMPONENT
+------------------------------------------------------- */
+
+export default function AnimalGame({
   onBack,
   addStar,
-  difficulty,
   completeGame,
-}: {
-  onBack: () => void
-  addStar: () => void
-  difficulty: string
-  completeGame: (
-  gameName: string
-  ) => void
+  resetRef,
 }) {
-  const animals =  difficulty === 'easy' ? easyItems : difficulty === 'medium' ? mediumItems : hardItems
-  const [target, setTarget] = useState(animals[0])
-  const [choices, setChoices] = useState<typeof animals>([])
-  const [direction, setDirection] = useState<'enToVi' | 'viToEn'>('enToVi')
+  const { languageMode } = useLanguage()
+  const { isLocked, setIsLocked, disableUI, isSpeaking } = useGameLock()
+
+  const [questionItem, setQuestionItem] = useState(null)
+  const [questionText, setQuestionText] = useState('')
+  const [choices, setChoices] = useState([])
+  const [correctAnswer, setCorrectAnswer] = useState('')
   const [score, setScore] = useState(0)
+  const [streak, setStreak] = useState(0)
   const [showCelebrate, setShowCelebrate] = useState(false)
-  const [streak, setStreak] =  useState(0)
- 	const {isLocked, setIsLocked, isSpeaking, disableUI, } = useGameLock()
-  
+
+  /* -----------------------------
+     Generate a new round
+  ----------------------------- */
+
+  const nextRound = () => {
+    if (disableUI) return
+
+    const item = animals[Math.floor(Math.random() * animals.length)]
+    setQuestionItem(item)
+
+    const mode = languageMode
+
+    let question, answer, wrongChoices
+
+    /* -----------------------------
+       SINGLE LANGUAGE MODES
+       emoji → word
+    ----------------------------- */
+
+    if (mode === 'en' || mode === 'vi' || mode === 'zh') {
+      question = item.emoji
+      answer = item[mode]
+
+      wrongChoices = animals
+        .filter((v) => v[mode] !== answer)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 3)
+        .map((v) => v[mode])
+    }
+
+    /* -----------------------------
+       DUAL LANGUAGE MODES
+       Random direction:
+       A → B or B → A
+    ----------------------------- */
+
+    if (mode === 'en-vi' || mode === 'en-zh') {
+      const [langA, langB] = mode === 'en-vi' ? ['en', 'vi'] : ['en', 'zh']
+
+      const flip = Math.random() > 0.5
+
+      if (flip) {
+        question = item[langA]
+        answer = item[langB]
+        wrongChoices = animals
+          .filter((v) => v[langB] !== answer)
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 3)
+          .map((v) => v[langB])
+      } else {
+        question = item[langB]
+        answer = item[langA]
+        wrongChoices = animals
+          .filter((v) => v[langA] !== answer)
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 3)
+          .map((v) => v[langA])
+      }
+    }
+
+    const allChoices = [...wrongChoices, answer].sort(() => Math.random() - 0.5)
+
+    setQuestionText(question)
+    setCorrectAnswer(answer)
+    setChoices(allChoices)
+  }
 
   useEffect(() => {
     nextRound()
-  }, [difficulty])
+  }, [languageMode])
 
- const nextRound = () => {
-  if (disableUI) return
-  const randomAnimal = animals[Math.floor(Math.random() * animals.length)]
-  setTarget(randomAnimal)
+  /* -----------------------------
+     Handle answer click
+  ----------------------------- */
 
-  // Random direction
-  const dir = Math.random() > 0.5 ? 'enToVi' : 'viToEn'
-  setDirection(dir)
+  const randomPraise = (lang) => {
+    const arr = uiText.praise[lang]
+    return arr[Math.floor(Math.random() * arr.length)]
+  }
 
-  // Number of choices based on difficulty
-  const choiceCount =
-    difficulty === 'easy' ? 3 :
-    difficulty === 'medium' ? 5 :
-    7
+  const handleClick = async (choice) => {
+    if (disableUI || isLocked) return
 
-  // Build wrong choices
-  let wrongChoices = animals
-    .filter(a => a.en !== randomAnimal.en)
-    .sort(() => Math.random() - 0.5)
-    .slice(0, choiceCount - 1)
+    if (choice === correctAnswer) {
+      playCorrect()
+      setIsLocked(true)
 
-  // Add correct answer
-  const allChoices = [...wrongChoices, randomAnimal].sort(
-    () => Math.random() - 0.5
-  )
+      if (streak === 2) speakLocalized({ text: uiText.streakSpeech.streak2, languageMode })
+      if (streak === 4) speakLocalized({ text: uiText.streakSpeech.streak4, languageMode })
+      if (streak === 9) speakLocalized({ text: uiText.streakSpeech.streak9, languageMode })
 
-  setChoices(allChoices)
-}
+      addStar()
+      const newScore = score + 1
+      setScore(newScore)
+      setStreak((prev) => prev + 1)
 
+      if (newScore >= 5) completeGame('animal')
+
+      setShowCelebrate(true)
+
+      const praiseLang =
+        languageMode === 'vi' || languageMode === 'en-vi'
+          ? 'vi'
+          : languageMode === 'zh' || languageMode === 'en-zh'
+          ? 'zh'
+          : 'en'
+
+      await speakLocalized({
+        text: {
+          en: `${randomPraise('en')}!`,
+          vi: `${randomPraise('vi')}!`,
+          zh: `${randomPraise('zh')}!`,
+        },
+        languageMode,
+      })
+
+      setTimeout(() => {
+        setShowCelebrate(false)
+        nextRound()
+        setIsLocked(false)
+      }, 2000)
+    } else {
+      playWrong()
+      setIsLocked(true)
+      setStreak(0)
+
+      await speakLocalized({
+        text: {
+          en: 'Try again!',
+          vi: 'Thử lại nhé!',
+          zh: '再试一次！',
+        },
+        languageMode,
+      })
+
+      setTimeout(() => setIsLocked(false), 1200)
+    }
+  }
+
+  /* -----------------------------
+     Speak question
+  ----------------------------- */
 
   const speakQuestion = async () => {
-	if (disableUI) return
-    if (direction === 'enToVi') {
-      await speak(`What is the Vietnamese word for`)
-      await speak(`Từ tiếng Việt là gì?`, 'vi-VN')
-	  await speak(`${target.en}?`)
-    } else {
-      await speak(`Listen carefully! What is the English word for`)
-      await speak(`Từ tiếng Anh là gì?`, 'vi-VN')
-	  await speak(`${target.vi}`, 'vi-VN')
-    }
+    if (disableUI) return
 
+    await speakLocalized({
+      text: uiText.instruction,
+      languageMode,
+    })
   }
 
-  const praises = ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!']
-  const randomPraise = () =>
-    praises[Math.floor(Math.random() * praises.length)]
-  const praisesVN = ['Làm tốt lắm!', 'Tuyệt vời!', 'Thật tuyệt diệu!', 'Đỉnh quá!', 'Hoan hô!']
-  const randomPraiseVN = () => praisesVN[Math.floor(Math.random() * praisesVN.length)]
+  /* -----------------------------
+     Reset support
+  ----------------------------- */
 
-  const handleClick = async(choice: typeof animals[0]) => {
-	 if (disableUI) return
-    const correct =
-      direction === 'enToVi'
-        ? choice.vi === target.vi
-        : choice.en === target.en
+  useEffect(() => {
+    if (resetRef) resetRef.current = resetAnimalGame
+  }, [])
 
-    if (correct) {
-      playCorrect()
-	  setIsLocked(true)
-	  if (streak === 2) {speak('Amazing streak!')}
-	  if (streak === 4) {speak('Super learner!')}
-	  if (streak === 9) {speak('WOW! Superstar!')}
-      addStar()
-	  setStreak((prev) => prev + 1)
-	  const newScore = score + 1
-	  setScore(newScore)
-	  if (newScore >= 5) { completeGame('AnimalsGame') }
-      setShowCelebrate(true)
-      const word = direction === 'enToVi' ? target.vi : target.en
-      const lang = direction === 'enToVi' ? 'vi-VN' : 'en-US'
-
-      if (lang === 'en-US') speak(`${randomPraise()} ${word}!`)
-	  if (lang === 'vi-VN') speak(`${randomPraiseVN()} ${word}!`, 'vi-VN')
-
-	  setTimeout(() => { setShowCelebrate(false)
-
-	nextRound()
-
-  setIsLocked(false)
-}, 2000)
-    } else {
-	  setIsLocked(true)
-      playWrong()
-	  setStreak(0)
-      await speak('Try again!')
-	  await speak('Thử lại nhé!', 'vi-VN')
-	  setIsLocked(false)
-    }
+  const resetAnimalGame = () => {
+    setScore(0)
+    setStreak(0)
+    setShowCelebrate(false)
+    nextRound()
   }
+
+  /* -----------------------------
+     RENDER
+  ----------------------------- */
 
   return (
     <>
-      <button onClick={onBack} style={nextButton}>⬅ Back</button>
+      <button onClick={onBack} style={nextButton}>
+        {uiText.back[languageMode]}
+      </button>
 
-      <h2>🐶 Animals Game - Trò chơi Động vật</h2>
+      <h2>{titles[languageMode]}</h2>
 
       <h2 style={{ color: '#ff7b00', marginTop: 10 }}>
-        ⭐ Score: {score}
+        {uiText.score[languageMode]}: {score}
       </h2>
-	  <h3>🔥 Streak: {streak}</h3>
-		{streak >= 3 && (
-		<div
-			style={{
-			fontSize: 32,
-			marginBottom: 20,
-			color: '#ff4757',
-			animation:
-			'pop 0.5s ease',
-			}}
-		>
-		🔥 Amazing Streak!
-		</div>
-	   )}
-      {showCelebrate && (
-        <div style={{ fontSize: 60, marginTop: 20, animation: 'pop 0.6s ease' }}>
-          🎉 ⭐ 🌟
+
+      <h3>{uiText.streak[languageMode]}: {streak}</h3>
+
+      {streak >= 3 && (
+        <div style={{ fontSize: 32, marginBottom: 20, color: '#ff4757', animation: 'pop .5s ease' }}>
+          {uiText.streakMessage[languageMode]}
         </div>
       )}
 
-      <p style={{ fontSize: 22, marginTop: 20 }}>
-        Match the correct word for this animal:
+      {showCelebrate && (
+        <div style={{ fontSize: 60, marginTop: 20, animation: 'pop .6s ease' }}>
+          🎉🐾🎉
+        </div>
+      )}
+
+      <p style={{ fontSize: 26, marginTop: 20 }}>
+        {uiText.instruction[languageMode]}
       </p>
 
-      <h1 style={{ fontSize: 80, marginTop: 10 }}>{target.emoji}</h1>
+      <h1 style={{ fontSize: 60, marginTop: 10 }}>
+        {questionText}
+      </h1>
 
       <div
         style={{
@@ -214,7 +355,7 @@ export default function AnimalsGame({
         {choices.map((c, i) => (
           <button
             key={i}
-			disabled={isLocked}
+            disabled={isLocked}
             onClick={() => handleClick(c)}
             style={{
               ...emojiButton,
@@ -222,24 +363,25 @@ export default function AnimalsGame({
               padding: '20px 30px',
             }}
           >
-            {direction === 'enToVi' ? c.vi : c.en}
+            {c}
           </button>
         ))}
       </div>
 
-      <button disabled={isLocked || isSpeaking}
-	  onClick={speakQuestion} style={{
-    ...speakButton,
-    opacity: disableUI ? 0.5 : 1
-  }}>
-        🔊 Hear Question
+      <button
+        disabled={disableUI}
+        onClick={speakQuestion}
+        style={{ ...speakButton, opacity: disableUI ? 0.5 : 1 }}
+      >
+        {uiText.hearQuestion[languageMode]}
       </button>
 
-      <button disabled={isLocked || isSpeaking} onClick={nextRound} style={{
-    ...nextButton,
-    opacity: disableUI ? 0.5 : 1
-  }}>
-        ➡️ Next
+      <button
+        disabled={isLocked || isSpeaking}
+        onClick={nextRound}
+        style={{ ...nextButton, opacity: disableUI ? 0.5 : 1 }}
+      >
+        {uiText.next[languageMode]}
       </button>
     </>
   )

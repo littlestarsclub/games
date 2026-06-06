@@ -5,16 +5,43 @@ import { useGameLock } from '../utils/useGameLock'
 import { useLanguage } from '../context/LanguageContext'
 import { speakLocalized } from '../utils/speakLocalized'
 
-const easyRange = { min: 1, max: 5 }
-const mediumRange = { min: 1, max: 10 }
-const hardRange = { min: 1, max: 20 }
+/* -------------------------------------------------------
+   20 WEATHER VOCABULARY ITEMS
+------------------------------------------------------- */
+
+const weatherItems = [
+  { emoji: '☀️', en: 'SUNNY', vi: 'NẮNG', zh: '晴天' },
+  { emoji: '🌤️', en: 'PARTLY SUNNY', vi: 'NẮNG NHẸ', zh: '多云转晴' },
+  { emoji: '⛅', en: 'CLOUDY', vi: 'CÓ MÂY', zh: '多云' },
+  { emoji: '☁️', en: 'CLOUD', vi: 'MÂY', zh: '云' },
+  { emoji: '🌧️', en: 'RAINY', vi: 'MƯA', zh: '雨天' },
+  { emoji: '🌦️', en: 'RAIN SHOWER', vi: 'MƯA RÀO', zh: '阵雨' },
+  { emoji: '⛈️', en: 'THUNDERSTORM', vi: 'GIÔNG BÃO', zh: '雷暴' },
+  { emoji: '🌩️', en: 'LIGHTNING', vi: 'SẤM SÉT', zh: '闪电' },
+  { emoji: '❄️', en: 'SNOW', vi: 'TUYẾT', zh: '雪' },
+  { emoji: '🌨️', en: 'SNOWY', vi: 'CÓ TUYẾT', zh: '下雪' },
+  { emoji: '🌬️', en: 'WINDY', vi: 'GIÓ', zh: '有风' },
+  { emoji: '💨', en: 'BREEZY', vi: 'GIÓ NHẸ', zh: '微风' },
+  { emoji: '🌪️', en: 'TORNADO', vi: 'LỐC XOÁY', zh: '龙卷风' },
+  { emoji: '🌫️', en: 'FOGGY', vi: 'SƯƠNG MÙ', zh: '雾' },
+  { emoji: '🌁', en: 'HEAVY FOG', vi: 'SƯƠNG DÀY', zh: '大雾' },
+  { emoji: '🌡️', en: 'HOT', vi: 'NÓNG', zh: '炎热' },
+  { emoji: '🥶', en: 'COLD', vi: 'LẠNH', zh: '寒冷' },
+  { emoji: '🌈', en: 'RAINBOW', vi: 'CẦU VỒNG', zh: '彩虹' },
+  { emoji: '☔', en: 'UMBRELLA', vi: 'DÙ', zh: '雨伞' },
+  { emoji: '🌙', en: 'NIGHT', vi: 'ĐÊM', zh: '夜晚' },
+]
+
+/* -------------------------------------------------------
+   UI TEXT
+------------------------------------------------------- */
 
 const titles = {
-  en: '🦀 Crab Count',
-  vi: '🦀 Đếm Cua',
-  zh: '🦀 数螃蟹',
-  'en-vi': '🦀 Crab Count — Đếm Cua',
-  'en-zh': '🦀 Crab Count — 数螃蟹',
+  en: '🌦️ Weather Match Game',
+  vi: '🌦️ Trò chơi Ghép Thời tiết',
+  zh: '🌦️ 天气配对游戏',
+  'en-vi': '🌦️ Weather Match Game — Ghép Thời tiết',
+  'en-zh': '🌦️ Weather Match Game — 天气配对游戏',
 }
 
 const uiText = {
@@ -27,11 +54,11 @@ const uiText = {
   },
 
   instruction: {
-    en: 'How many crabs do you see?',
-    vi: 'Bạn thấy bao nhiêu con cua?',
-    zh: '你看到多少只螃蟹？',
-    'en-vi': 'How many crabs do you see? / Bạn thấy bao nhiêu con cua?',
-    'en-zh': 'How many crabs do you see? / 你看到多少只螃蟹？',
+    en: 'Match the correct weather word!',
+    vi: 'Ghép đúng từ thời tiết!',
+    zh: '选择正确的天气词语！',
+    'en-vi': 'Match the correct weather word! / Ghép đúng từ thời tiết!',
+    'en-zh': 'Match the correct weather word! / 选择正确的天气词语！',
   },
 
   hearQuestion: {
@@ -82,65 +109,116 @@ const uiText = {
 
   praise: {
     en: ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!'],
-    vi: ['Làm tốt lắm!', 'Tuyệt vời!', 'Thật tuyệt diệu!', 'Đỉnh quá!', 'Hoan hô!'],
+    vi: ['Tuyệt vời!', 'Giỏi lắm!', 'Xuất sắc!', 'Hay quá!', 'Yeah!'],
     zh: ['太棒了！', '太精彩了！', '干得好！', '厉害！', '耶！'],
   },
 }
 
-export default function CrabCountGame({
+/* -------------------------------------------------------
+   COMPONENT
+------------------------------------------------------- */
+
+export default function WeatherMatchGame({
   onBack,
   addStar,
-  difficulty,
   completeGame,
   resetRef,
 }) {
-  const range =
-    difficulty === 'easy'
-      ? easyRange
-      : difficulty === 'medium'
-      ? mediumRange
-      : hardRange
+  const { languageMode } = useLanguage()
+  const { isLocked, setIsLocked, disableUI, isSpeaking } = useGameLock()
 
-  const [count, setCount] = useState(1)
-  const [choices, setChoices] = useState<number[]>([])
+  const [questionItem, setQuestionItem] = useState(null)
+  const [questionText, setQuestionText] = useState('')
+  const [choices, setChoices] = useState([])
+  const [correctAnswer, setCorrectAnswer] = useState('')
   const [score, setScore] = useState(0)
   const [streak, setStreak] = useState(0)
   const [showCelebrate, setShowCelebrate] = useState(false)
 
-  const { isLocked, setIsLocked, disableUI, isSpeaking } = useGameLock()
-  const { languageMode } = useLanguage()
-
-  useEffect(() => {
-    nextRound()
-  }, [difficulty])
+  /* -----------------------------
+     Generate a new round
+  ----------------------------- */
 
   const nextRound = () => {
     if (disableUI) return
 
-    const newCount =
-      Math.floor(Math.random() * (range.max - range.min + 1)) + range.min
+    const item = weatherItems[Math.floor(Math.random() * weatherItems.length)]
+    setQuestionItem(item)
 
-    setCount(newCount)
+    const mode = languageMode
 
-    const wrong = new Set<number>()
-    while (wrong.size < 4) {
-      const n =
-        Math.floor(Math.random() * (range.max - range.min + 1)) + range.min
-      if (n !== newCount) wrong.add(n)
+    let question, answer, wrongChoices
+
+    /* -----------------------------
+       SINGLE LANGUAGE MODES
+       emoji → word
+    ----------------------------- */
+
+    if (mode === 'en' || mode === 'vi' || mode === 'zh') {
+      question = item.emoji
+      answer = item[mode]
+
+      wrongChoices = weatherItems
+        .filter((v) => v[mode] !== answer)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 3)
+        .map((v) => v[mode])
     }
 
-    setChoices([...wrong, newCount].sort(() => Math.random() - 0.5))
+    /* -----------------------------
+       DUAL LANGUAGE MODES
+       Random direction:
+       A → B or B → A
+    ----------------------------- */
+
+    if (mode === 'en-vi' || mode === 'en-zh') {
+      const [langA, langB] = mode === 'en-vi' ? ['en', 'vi'] : ['en', 'zh']
+
+      const flip = Math.random() > 0.5
+
+      if (flip) {
+        question = item[langA]
+        answer = item[langB]
+        wrongChoices = weatherItems
+          .filter((v) => v[langB] !== answer)
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 3)
+          .map((v) => v[langB])
+      } else {
+        question = item[langB]
+        answer = item[langA]
+        wrongChoices = weatherItems
+          .filter((v) => v[langA] !== answer)
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 3)
+          .map((v) => v[langA])
+      }
+    }
+
+    const allChoices = [...wrongChoices, answer].sort(() => Math.random() - 0.5)
+
+    setQuestionText(question)
+    setCorrectAnswer(answer)
+    setChoices(allChoices)
   }
+
+  useEffect(() => {
+    nextRound()
+  }, [languageMode])
+
+  /* -----------------------------
+     Handle answer click
+  ----------------------------- */
 
   const randomPraise = (lang) => {
     const arr = uiText.praise[lang]
     return arr[Math.floor(Math.random() * arr.length)]
   }
 
-  const handleClick = async (choice: number) => {
+  const handleClick = async (choice) => {
     if (disableUI || isLocked) return
 
-    if (choice === count) {
+    if (choice === correctAnswer) {
       playCorrect()
       setIsLocked(true)
 
@@ -153,7 +231,7 @@ export default function CrabCountGame({
       setScore(newScore)
       setStreak((prev) => prev + 1)
 
-      if (newScore >= 5) completeGame('crabcount')
+      if (newScore >= 5) completeGame('weathermatch')
 
       setShowCelebrate(true)
 
@@ -166,9 +244,9 @@ export default function CrabCountGame({
 
       await speakLocalized({
         text: {
-          en: `${randomPraise('en')} ${choice}!`,
-          vi: `${randomPraise('vi')} ${choice}!`,
-          zh: `${randomPraise('zh')} ${choice}!`,
+          en: `${randomPraise('en')}!`,
+          vi: `${randomPraise('vi')}!`,
+          zh: `${randomPraise('zh')}!`,
         },
         languageMode,
       })
@@ -196,6 +274,10 @@ export default function CrabCountGame({
     }
   }
 
+  /* -----------------------------
+     Speak question
+  ----------------------------- */
+
   const speakQuestion = async () => {
     if (disableUI) return
 
@@ -205,16 +287,24 @@ export default function CrabCountGame({
     })
   }
 
+  /* -----------------------------
+     Reset support
+  ----------------------------- */
+
   useEffect(() => {
-    if (resetRef) resetRef.current = resetCrabGame
+    if (resetRef) resetRef.current = resetWeatherGame
   }, [])
 
-  const resetCrabGame = () => {
+  const resetWeatherGame = () => {
     setScore(0)
     setStreak(0)
     setShowCelebrate(false)
     nextRound()
   }
+
+  /* -----------------------------
+     RENDER
+  ----------------------------- */
 
   return (
     <>
@@ -238,25 +328,17 @@ export default function CrabCountGame({
 
       {showCelebrate && (
         <div style={{ fontSize: 60, marginTop: 20, animation: 'pop .6s ease' }}>
-          🌊🦀⭐
+          🌦️🎉⭐
         </div>
       )}
 
-      <p style={{ fontSize: 22, marginTop: 20 }}>
+      <p style={{ fontSize: 26, marginTop: 20 }}>
         {uiText.instruction[languageMode]}
       </p>
 
-      <div
-        style={{
-          fontSize: 60,
-          marginTop: 20,
-          lineHeight: '70px',
-        }}
-      >
-        {Array.from({ length: count }).map((_, i) => (
-          <span key={i}>🦀</span>
-        ))}
-      </div>
+      <h1 style={{ fontSize: 70, marginTop: 10 }}>
+        {questionText}
+      </h1>
 
       <div
         style={{
@@ -274,7 +356,7 @@ export default function CrabCountGame({
             onClick={() => handleClick(c)}
             style={{
               ...emojiButton,
-              fontSize: 32,
+              fontSize: 28,
               padding: '20px 30px',
             }}
           >

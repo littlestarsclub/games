@@ -1,185 +1,344 @@
 import { useEffect, useState } from 'react'
-import { speak } from '../utils/speak'
 import { playCorrect, playWrong } from '../utils/sounds'
 import { nextButton, speakButton, emojiButton } from '../utils/gameStyles'
 import { useGameLock } from '../utils/useGameLock'
+import { useLanguage } from '../context/LanguageContext'
+import { speakLocalized } from '../utils/speakLocalized'
 
-const planets = [
-  { emoji: '☀️', en: 'SUN', vi: 'MẶT TRỜI' },
-  { emoji: '🌑', en: 'MOON', vi: 'MẶT TRĂNG' },
-  { emoji: '🪐', en: 'SATURN', vi: 'SAO THỔ' },
-  { emoji: '🌍', en: 'EARTH', vi: 'TRÁI ĐẤT' },
-  { emoji: '🔥', en: 'MARS', vi: 'SAO HỎA' },
-  { emoji: '☁️', en: 'VENUS', vi: 'SAO KIM' },
-  { emoji: '💨', en: 'JUPITER', vi: 'SAO MỘC' },
-  { emoji: '❄️', en: 'NEPTUNE', vi: 'SAO HẢI VƯƠNG' },
+/* -------------------------------------------------------
+   20 SPACE VOCABULARY ITEMS
+------------------------------------------------------- */
+
+const spaceItems = [
+  { emoji: '🌍', en: 'EARTH', vi: 'TRÁI ĐẤT', zh: '地球' },
+  { emoji: '🌕', en: 'MOON', vi: 'MẶT TRĂNG', zh: '月亮' },
+  { emoji: '🌞', en: 'SUN', vi: 'MẶT TRỜI', zh: '太阳' },
+  { emoji: '⭐', en: 'STAR', vi: 'NGÔI SAO', zh: '星星' },
+  { emoji: '🌟', en: 'SHOOTING STAR', vi: 'SAO BĂNG', zh: '流星' },
+  { emoji: '🌌', en: 'GALAXY', vi: 'DẢI NGÂN HÀ', zh: '银河' },
+  { emoji: '🪐', en: 'PLANET', vi: 'HÀNH TINH', zh: '行星' },
+  { emoji: '🔭', en: 'TELESCOPE', vi: 'KÍNH THIÊN VĂN', zh: '望远镜' },
+  { emoji: '🚀', en: 'ROCKET', vi: 'TÊN LỬA', zh: '火箭' },
+  { emoji: '👩‍🚀', en: 'ASTRONAUT', vi: 'PHI HÀNH GIA', zh: '宇航员' },
+  { emoji: '🛰️', en: 'SATELLITE', vi: 'VỆ TINH', zh: '卫星' },
+  { emoji: '☄️', en: 'COMET', vi: 'SAO CHỔI', zh: '彗星' },
+  { emoji: '🌑', en: 'NEW MOON', vi: 'TRĂNG NON', zh: '新月' },
+  { emoji: '🌒', en: 'CRESCENT MOON', vi: 'TRĂNG LƯỠI LIỀM', zh: '娥眉月' },
+  { emoji: '🌖', en: 'GIBBOUS MOON', vi: 'TRĂNG KHUYẾT', zh: '盈凸月' },
+  { emoji: '🌙', en: 'NIGHT MOON', vi: 'TRĂNG ĐÊM', zh: '夜月' },
+  { emoji: '🌠', en: 'SHOOTING STAR', vi: 'SAO BĂNG', zh: '流星' },
+  { emoji: '🪐', en: 'SATURN', vi: 'SAO THỔ', zh: '土星' },
+  { emoji: '🌋', en: 'VOLCANO PLANET', vi: 'HÀNH TINH NÚI LỬA', zh: '火山星' },
+  { emoji: '🌫️', en: 'NEBULA', vi: 'TINH VÂN', zh: '星云' },
 ]
 
-export default function PlanetMatchGame({
+/* -------------------------------------------------------
+   UI TEXT
+------------------------------------------------------- */
+
+const titles = {
+  en: '🚀 Space Match Game',
+  vi: '🚀 Trò chơi Ghép Chủ đề Không gian',
+  zh: '🚀 太空配对游戏',
+  'en-vi': '🚀 Space Match Game — Ghép Chủ đề Không gian',
+  'en-zh': '🚀 Space Match Game — 太空配对游戏',
+}
+
+const uiText = {
+  back: {
+    en: '⬅ Back',
+    vi: '⬅ Quay lại',
+    zh: '⬅ 返回',
+    'en-vi': '⬅ Back / Quay lại',
+    'en-zh': '⬅ Back / 返回',
+  },
+
+  instruction: {
+    en: 'Match the correct space word!',
+    vi: 'Ghép đúng từ vựng không gian!',
+    zh: '选择正确的太空词语！',
+    'en-vi': 'Match the correct space word! / Ghép đúng từ vựng không gian!',
+    'en-zh': 'Match the correct space word! / 选择正确的太空词语！',
+  },
+
+  hearQuestion: {
+    en: '🔊 Hear Question',
+    vi: '🔊 Nghe câu hỏi',
+    zh: '🔊 听问题',
+    'en-vi': '🔊 Hear Question / Nghe câu hỏi',
+    'en-zh': '🔊 Hear Question / 听问题',
+  },
+
+  next: {
+    en: '➡️ Next',
+    vi: '➡️ Tiếp theo',
+    zh: '➡️ 下一题',
+    'en-vi': '➡️ Next / Tiếp theo',
+    'en-zh': '➡️ Next / 下一题',
+  },
+
+  score: {
+    en: '⭐ Score',
+    vi: '⭐ Điểm',
+    zh: '⭐ 分数',
+    'en-vi': '⭐ Score / Điểm',
+    'en-zh': '⭐ Score / 分数',
+  },
+
+  streak: {
+    en: '🔥 Streak',
+    vi: '🔥 Chuỗi đúng',
+    zh: '🔥 连续答对',
+    'en-vi': '🔥 Streak / Chuỗi đúng',
+    'en-zh': '🔥 Streak / 连续答对',
+  },
+
+  streakMessage: {
+    en: '🔥 Amazing Streak!',
+    vi: '🔥 Chuỗi đúng tuyệt vời!',
+    zh: '🔥 惊人的连胜！',
+    'en-vi': '🔥 Amazing Streak! / Chuỗi đúng tuyệt vời!',
+    'en-zh': '🔥 Amazing Streak! / 惊人的连胜！',
+  },
+
+  streakSpeech: {
+    streak2: { en: 'Amazing streak!', vi: 'Chuỗi đúng tuyệt vời!', zh: '惊人的连胜！' },
+    streak4: { en: 'Super learner!', vi: 'Siêu học sinh!', zh: '超级学习者！' },
+    streak9: { en: 'WOW! Superstar!', vi: 'WOW! Siêu sao!', zh: '哇！超级明星！' },
+  },
+
+  praise: {
+    en: ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!'],
+    vi: ['Tuyệt vời!', 'Giỏi lắm!', 'Xuất sắc!', 'Hay quá!', 'Yeah!'],
+    zh: ['太棒了！', '太精彩了！', '干得好！', '厉害！', '耶！'],
+  },
+}
+
+/* -------------------------------------------------------
+   COMPONENT
+------------------------------------------------------- */
+
+export default function SpaceMatchGame({
   onBack,
   addStar,
-  difficulty,
   completeGame,
-}: {
-  onBack: () => void
-  addStar: () => void
-  difficulty: string
-  completeGame: (
-    gameName: string
-  ) => void
+  resetRef,
 }) {
-  const [target, setTarget] = useState(planets[0])
-  const [choices, setChoices] = useState<typeof planets>([])
-  const [direction, setDirection] = useState<'enToVi' | 'viToEn'>('enToVi')
+  const { languageMode } = useLanguage()
+  const { isLocked, setIsLocked, disableUI, isSpeaking } = useGameLock()
+
+  const [questionItem, setQuestionItem] = useState(null)
+  const [questionText, setQuestionText] = useState('')
+  const [choices, setChoices] = useState([])
+  const [correctAnswer, setCorrectAnswer] = useState('')
   const [score, setScore] = useState(0)
+  const [streak, setStreak] = useState(0)
   const [showCelebrate, setShowCelebrate] = useState(false)
-  const [streak, setStreak] =  useState(0)
- 	const {isLocked, setIsLocked, isSpeaking, disableUI, } = useGameLock()
-  
+
+  /* -----------------------------
+     Generate a new round
+  ----------------------------- */
+
+  const nextRound = () => {
+    if (disableUI) return
+
+    const item = spaceItems[Math.floor(Math.random() * spaceItems.length)]
+    setQuestionItem(item)
+
+    const mode = languageMode
+
+    let question, answer, wrongChoices
+
+    /* -----------------------------
+       SINGLE LANGUAGE MODES
+       emoji → word
+    ----------------------------- */
+
+    if (mode === 'en' || mode === 'vi' || mode === 'zh') {
+      question = item.emoji
+      answer = item[mode]
+
+      wrongChoices = spaceItems
+        .filter((v) => v[mode] !== answer)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 3)
+        .map((v) => v[mode])
+    }
+
+    /* -----------------------------
+       DUAL LANGUAGE MODES
+       Random direction:
+       A → B or B → A
+    ----------------------------- */
+
+    if (mode === 'en-vi' || mode === 'en-zh') {
+      const [langA, langB] = mode === 'en-vi' ? ['en', 'vi'] : ['en', 'zh']
+
+      const flip = Math.random() > 0.5
+
+      if (flip) {
+        question = item[langA]
+        answer = item[langB]
+        wrongChoices = spaceItems
+          .filter((v) => v[langB] !== answer)
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 3)
+          .map((v) => v[langB])
+      } else {
+        question = item[langB]
+        answer = item[langA]
+        wrongChoices = spaceItems
+          .filter((v) => v[langA] !== answer)
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 3)
+          .map((v) => v[langA])
+      }
+    }
+
+    const allChoices = [...wrongChoices, answer].sort(() => Math.random() - 0.5)
+
+    setQuestionText(question)
+    setCorrectAnswer(answer)
+    setChoices(allChoices)
+  }
 
   useEffect(() => {
     nextRound()
-  }, [difficulty])
+  }, [languageMode])
 
-  const nextRound = () => {
-	   if (disableUI) return
-  const randomPlanet =
-    planets[Math.floor(Math.random() * planets.length)]
-  setTarget(randomPlanet)
+  /* -----------------------------
+     Handle answer click
+  ----------------------------- */
 
-  // Random direction
-  const dir = Math.random() > 0.5 ? 'enToVi' : 'viToEn'
-  setDirection(dir)
-
-  // Number of choices based on difficulty
-  const choiceCount =
-    difficulty === 'easy' ? 3 :
-    difficulty === 'medium' ? 4 :
-    6
-
-  // Build wrong choices
-  let wrong = planets
-    .filter(p => p.en !== randomPlanet.en)
-    .sort(() => Math.random() - 0.5)
-    .slice(0, choiceCount - 1)
-
-  // Combine and shuffle
-  const allChoices = [...wrong, randomPlanet].sort(
-    () => Math.random() - 0.5
-  )
-
-  setChoices(allChoices)
-}
-
-
-  const speakQuestion = async () => {
-	  if (disableUI) return
-     if (direction === 'enToVi') {
-      await speak(`What is the Vietnamese word for`)
-      await speak(`Từ tiếng Việt là gì?`, 'vi-VN')
-	  await speak(`${target.en}?`)
-    } else {
-      await speak(`Listen carefully! What is the English word for`)
-      await speak(`Từ tiếng Anh là gì?`, 'vi-VN')
-	  await speak(`${target.vi}`, 'vi-VN')
-    }
-
+  const randomPraise = (lang) => {
+    const arr = uiText.praise[lang]
+    return arr[Math.floor(Math.random() * arr.length)]
   }
 
-  const praises = ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!']
-  const randomPraise = () => praises[Math.floor(Math.random() * praises.length)]
-  const praisesVN = ['Làm tốt lắm!', 'Tuyệt vời!', 'Thật tuyệt diệu!', 'Đỉnh quá!', 'Hoan hô!']
-  const randomPraiseVN = () => praisesVN[Math.floor(Math.random() * praisesVN.length)]
- 
- const handleClick = async(choice: typeof planets[0]) => {
-	 if (disableUI) return
-    const correct =
-      direction === 'enToVi'
-        ? choice.vi === target.vi
-        : choice.en === target.en
+  const handleClick = async (choice) => {
+    if (disableUI || isLocked) return
 
-    if (correct) {
+    if (choice === correctAnswer) {
       playCorrect()
-	  setIsLocked(true)
-	  if (streak === 2) {speak('Amazing streak!')}
-	  if (streak === 4) {speak('Super learner!')}
-	  if (streak === 9) {speak('WOW! Superstar!')}
+      setIsLocked(true)
+
+      if (streak === 2) speakLocalized({ text: uiText.streakSpeech.streak2, languageMode })
+      if (streak === 4) speakLocalized({ text: uiText.streakSpeech.streak4, languageMode })
+      if (streak === 9) speakLocalized({ text: uiText.streakSpeech.streak9, languageMode })
+
       addStar()
-	  setStreak((prev) => prev + 1)
-	  const newScore = score + 1
+      const newScore = score + 1
+      setScore(newScore)
+      setStreak((prev) => prev + 1)
 
-setScore(newScore)
+      if (newScore >= 5) completeGame('spacematch')
 
-if (newScore >= 5) {
-  completeGame('PlanetMatchGame')
-}
       setShowCelebrate(true)
 
-      const word = direction === 'enToVi' ? target.vi : target.en
-      const lang = direction === 'enToVi' ? 'vi-VN' : 'en-US'
+      const praiseLang =
+        languageMode === 'vi' || languageMode === 'en-vi'
+          ? 'vi'
+          : languageMode === 'zh' || languageMode === 'en-zh'
+          ? 'zh'
+          : 'en'
 
-      if (lang === 'en-US') await speak(`${randomPraise()} ${word}!`)
-	  if (lang === 'vi-VN') await speak(`${randomPraiseVN()} ${word}!`, 'vi-VN')
+      await speakLocalized({
+        text: {
+          en: `${randomPraise('en')}!`,
+          vi: `${randomPraise('vi')}!`,
+          zh: `${randomPraise('zh')}!`,
+        },
+        languageMode,
+      })
 
-     setTimeout(() => {
-  setShowCelebrate(false)
-
-  nextRound()
-
-  setIsLocked(false)
-}, 2000)
-   } else {
-  setIsLocked(true)
+      setTimeout(() => {
+        setShowCelebrate(false)
+        nextRound()
+        setIsLocked(false)
+      }, 2000)
+    } else {
       playWrong()
-	  setStreak(0)
-      await speak('Try again!')
-      await speak('Thử lại nhé!', 'vi-VN')
-	  setIsLocked(false)
+      setIsLocked(true)
+      setStreak(0)
+
+      await speakLocalized({
+        text: {
+          en: 'Try again!',
+          vi: 'Thử lại nhé!',
+          zh: '再试一次！',
+        },
+        languageMode,
+      })
+
+      setTimeout(() => setIsLocked(false), 1200)
     }
   }
+
+  /* -----------------------------
+     Speak question
+  ----------------------------- */
+
+  const speakQuestion = async () => {
+    if (disableUI) return
+
+    await speakLocalized({
+      text: uiText.instruction,
+      languageMode,
+    })
+  }
+
+  /* -----------------------------
+     Reset support
+  ----------------------------- */
+
+  useEffect(() => {
+    if (resetRef) resetRef.current = resetSpaceGame
+  }, [])
+
+  const resetSpaceGame = () => {
+    setScore(0)
+    setStreak(0)
+    setShowCelebrate(false)
+    nextRound()
+  }
+
+  /* -----------------------------
+     RENDER
+  ----------------------------- */
 
   return (
     <>
-      <button onClick={onBack} style={nextButton}>⬅ Back</button>
+      <button onClick={onBack} style={nextButton}>
+        {uiText.back[languageMode]}
+      </button>
 
-      <h2>🪐 Planet Match - Ghép hành tinh</h2>
+      <h2>{titles[languageMode]}</h2>
 
-      <h2 style={{ color: '#00aaff', marginTop: 10 }}>
-        ⭐ Score: {score}
+      <h2 style={{ color: '#ff7b00', marginTop: 10 }}>
+        {uiText.score[languageMode]}: {score}
       </h2>
-      <h3>
-  🔥 Streak: {streak}
-</h3>
-{streak >= 3 && (
-  <div
-    style={{
-      fontSize: 32,
-      marginBottom: 20,
-      color: '#ff4757',
-      animation:
-        'pop 0.5s ease',
-    }}
-  >
-    🔥 Amazing Streak!
-  </div>
-)}
-      {showCelebrate && (
-        <div
-          style={{
-            fontSize: 60,
-            marginTop: 20,
-            animation: 'pop 0.6s ease',
-          }}
-        >
-          🌟🚀✨
+
+      <h3>{uiText.streak[languageMode]}: {streak}</h3>
+
+      {streak >= 3 && (
+        <div style={{ fontSize: 32, marginBottom: 20, color: '#ff4757', animation: 'pop .5s ease' }}>
+          {uiText.streakMessage[languageMode]}
         </div>
       )}
 
-      <p style={{ fontSize: 22, marginTop: 20 }}>
-        Match the correct word for this planet:
+      {showCelebrate && (
+        <div style={{ fontSize: 60, marginTop: 20, animation: 'pop .6s ease' }}>
+          🚀🌟🎉
+        </div>
+      )}
+
+      <p style={{ fontSize: 26, marginTop: 20 }}>
+        {uiText.instruction[languageMode]}
       </p>
 
-      <h1 style={{ fontSize: 80, marginTop: 10 }}>{target.emoji}</h1>
+      <h1 style={{ fontSize: 70, marginTop: 10 }}>
+        {questionText}
+      </h1>
 
       <div
         style={{
@@ -193,7 +352,7 @@ if (newScore >= 5) {
         {choices.map((c, i) => (
           <button
             key={i}
-			disabled={isLocked}
+            disabled={isLocked}
             onClick={() => handleClick(c)}
             style={{
               ...emojiButton,
@@ -201,23 +360,25 @@ if (newScore >= 5) {
               padding: '20px 30px',
             }}
           >
-            {direction === 'enToVi' ? c.vi : c.en}
+            {c}
           </button>
         ))}
       </div>
 
-      <button disabled={disableUI} onClick={speakQuestion} style={{
-    ...speakButton,
-    opacity: disableUI ? 0.5 : 1
-  }}>
-        🔊 Hear Question
+      <button
+        disabled={disableUI}
+        onClick={speakQuestion}
+        style={{ ...speakButton, opacity: disableUI ? 0.5 : 1 }}
+      >
+        {uiText.hearQuestion[languageMode]}
       </button>
 
-      <button disabled={isLocked || isSpeaking} onClick={nextRound} style={{
-    ...nextButton,
-    opacity: disableUI ? 0.5 : 1
-  }}>
-        ➡️ Next
+      <button
+        disabled={isLocked || isSpeaking}
+        onClick={nextRound}
+        style={{ ...nextButton, opacity: disableUI ? 0.5 : 1 }}
+      >
+        {uiText.next[languageMode]}
       </button>
     </>
   )

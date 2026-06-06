@@ -1,259 +1,292 @@
 import { useEffect, useState } from 'react'
-import { nextButton, speakButton, emojiButton } from '../utils/gameStyles'
-import { speak } from '../utils/speak'
+import { nextButton } from '../utils/gameStyles'
 import { playCorrect, playWrong } from '../utils/sounds'
+import { useGameLock } from '../utils/useGameLock'
+import { useLanguage } from '../context/LanguageContext'
+import { speakLocalized } from '../utils/speakLocalized'
 
 const easyItems = [
-  // SLOW
-  { emoji: '🐢', name: 'slow', vi: 'chậm' },
-  { emoji: '🐌', name: 'slow', vi: 'chậm' },
-  { emoji: '🚶', name: 'slow', vi: 'chậm' },
+  { emoji: '🐢', name: 'slow', vi: 'chậm', zh: '慢' },
+  { emoji: '🐌', name: 'slow', vi: 'chậm', zh: '慢' },
+  { emoji: '🚶', name: 'slow', vi: 'chậm', zh: '慢' },
 
-  // FAST
-  { emoji: '🏎️', name: 'fast', vi: 'nhanh' },
-  { emoji: '🐆', name: 'fast', vi: 'nhanh' },
-  { emoji: '🚀', name: 'fast', vi: 'nhanh' },
+  { emoji: '🏎️', name: 'fast', vi: 'nhanh', zh: '快' },
+  { emoji: '🐆', name: 'fast', vi: 'nhanh', zh: '快' },
+  { emoji: '🚀', name: 'fast', vi: 'nhanh', zh: '快' },
 ]
+
 const mediumItems = [
-  // SLOW
-  { emoji: '🐢', name: 'slow', vi: 'chậm' },
-  { emoji: '🐌', name: 'slow', vi: 'chậm' },
-  { emoji: '🚶', name: 'slow', vi: 'chậm' },
-  { emoji: '🦥', name: 'slow', vi: 'chậm' },   // sloth
-  { emoji: '🚜', name: 'slow', vi: 'chậm' },   // slow tractor
+  ...easyItems,
+  { emoji: '🦥', name: 'slow', vi: 'chậm', zh: '慢' },
+  { emoji: '🚜', name: 'slow', vi: 'chậm', zh: '慢' },
 
-  // FAST
-  { emoji: '🏎️', name: 'fast', vi: 'nhanh' },
-  { emoji: '🐆', name: 'fast', vi: 'nhanh' },
-  { emoji: '🚀', name: 'fast', vi: 'nhanh' },
-  { emoji: '✈️', name: 'fast', vi: 'nhanh' },  // airplane
-  { emoji: '🏃‍♂️', name: 'fast', vi: 'nhanh' }, // running
+  { emoji: '✈️', name: 'fast', vi: 'nhanh', zh: '快' },
+  { emoji: '🏃‍♂️', name: 'fast', vi: 'nhanh', zh: '快' },
 ]
+
 const hardItems = [
-  // SLOW
-  { emoji: '🐢', name: 'slow', vi: 'chậm' },
-  { emoji: '🐌', name: 'slow', vi: 'chậm' },
-  { emoji: '🚶', name: 'slow', vi: 'chậm' },
-  { emoji: '🦥', name: 'slow', vi: 'chậm' },
-  { emoji: '🚜', name: 'slow', vi: 'chậm' },
-  { emoji: '⏳', name: 'slow', vi: 'chậm' },   // hourglass
-  { emoji: '🐘', name: 'slow', vi: 'chậm' },   // big animals move slower
+  ...mediumItems,
+  { emoji: '⏳', name: 'slow', vi: 'chậm', zh: '慢' },
+  { emoji: '🐘', name: 'slow', vi: 'chậm', zh: '慢' },
 
-  // FAST
-  { emoji: '🏎️', name: 'fast', vi: 'nhanh' },
-  { emoji: '🐆', name: 'fast', vi: 'nhanh' },
-  { emoji: '🚀', name: 'fast', vi: 'nhanh' },
-  { emoji: '✈️', name: 'fast', vi: 'nhanh' },
-  { emoji: '🏃‍♂️', name: 'fast', vi: 'nhanh' },
-  { emoji: '⚡', name: 'fast', vi: 'nhanh' },   // lightning
-  { emoji: '💨', name: 'fast', vi: 'nhanh' },   // speed lines
+  { emoji: '⚡', name: 'fast', vi: 'nhanh', zh: '快' },
+  { emoji: '💨', name: 'fast', vi: 'nhanh', zh: '快' },
 ]
 
-function randomItem(list) {
-  return list[Math.floor(Math.random() * list.length)]
+const titles = {
+  en: '⚡🐢 Fast or Slow',
+  vi: '⚡🐢 Nhanh hay Chậm',
+  zh: '⚡🐢 快还是慢',
+  'en-vi': '⚡🐢 Fast or Slow — Nhanh hay Chậm',
+  'en-zh': '⚡🐢 Fast or Slow — 快还是慢',
 }
+
+const uiText = {
+  back: {
+    en: '⬅ Back',
+    vi: '⬅ Quay lại',
+    zh: '⬅ 返回',
+    'en-vi': '⬅ Back / Quay lại',
+    'en-zh': '⬅ Back / 返回',
+  },
+
+  instruction: {
+    en: 'Is it FAST or SLOW?',
+    vi: 'Là NHANH hay CHẬM?',
+    zh: '这是快的还是慢的？',
+    'en-vi': 'Is it FAST or SLOW? / Là NHANH hay CHẬM?',
+    'en-zh': 'Is it FAST or SLOW? / 这是快的还是慢的？',
+  },
+
+  fast: {
+    en: '⚡ FAST',
+    vi: '⚡ NHANH',
+    zh: '⚡ 快',
+    'en-vi': '⚡ FAST / NHANH',
+    'en-zh': '⚡ FAST / 快',
+  },
+
+  slow: {
+    en: '🐢 SLOW',
+    vi: '🐢 CHẬM',
+    zh: '🐢 慢',
+    'en-vi': '🐢 SLOW / CHẬM',
+    'en-zh': '🐢 SLOW / 慢',
+  },
+
+  score: {
+    en: '⭐ Score',
+    vi: '⭐ Điểm',
+    zh: '⭐ 分数',
+    'en-vi': '⭐ Score / Điểm',
+    'en-zh': '⭐ Score / 分数',
+  },
+
+  streak: {
+    en: '🔥 Streak',
+    vi: '🔥 Chuỗi đúng',
+    zh: '🔥 连续答对',
+    'en-vi': '🔥 Streak / Chuỗi đúng',
+    'en-zh': '🔥 Streak / 连续答对',
+  },
+
+  streakMessage: {
+    en: '🔥 Amazing Streak!',
+    vi: '🔥 Chuỗi đúng tuyệt vời!',
+    zh: '🔥 惊人的连胜！',
+    'en-vi': '🔥 Amazing Streak! / Chuỗi đúng tuyệt vời!',
+    'en-zh': '🔥 Amazing Streak! / 惊人的连胜！',
+  },
+
+  streakSpeech: {
+    streak2: { en: 'Amazing streak!', vi: 'Chuỗi đúng tuyệt vời!', zh: '惊人的连胜！' },
+    streak4: { en: 'Super learner!', vi: 'Siêu học sinh!', zh: '超级学习者！' },
+    streak9: { en: 'WOW! Superstar!', vi: 'WOW! Siêu sao!', zh: '哇！超级明星！' },
+  },
+}
+
 
 export default function FastSlowGame({
   onBack,
   addStar,
   difficulty,
   completeGame,
-}: {
-  onBack: () => void
-  addStar: () => void
-  difficulty: string
-  completeGame: (
-    gameName: string
-  ) => void
+  resetRef,
 }) {
-	 const items =  difficulty === 'easy' ? easyItems : difficulty === 'medium' ? mediumItems : hardItems
-  
-  const [item, setItem] =
-    useState(randomItem(items))
+  const items =
+    difficulty === 'easy'
+      ? easyItems
+      : difficulty === 'medium'
+      ? mediumItems
+      : hardItems
 
-  const [score, setScore] =
-    useState(0)
+  const [item, setItem] = useState(items[0])
+  const [score, setScore] = useState(0)
+  const [streak, setStreak] = useState(0)
+  const [showCelebrate, setShowCelebrate] = useState(false)
 
-  const [streak, setStreak] =
-    useState(0)
+  const { isLocked, setIsLocked, disableUI } = useGameLock()
+  const { languageMode } = useLanguage()
 
-  const [showCelebrate, setShowCelebrate] =
-    useState(false)
-	const [isLocked, setIsLocked] =
-  useState(false)
+  const praises = {
+    en: ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!'],
+    vi: ['Làm tốt lắm!', 'Tuyệt vời!', 'Xuất sắc!', 'Hay quá!', 'Yeah!'],
+    zh: ['太棒了！', '太精彩了！', '干得好！', '厉害！', '耶！'],
+  }
+
+  const randomPraise = (lang) => {
+    const arr = praises[lang]
+    return arr[Math.floor(Math.random() * arr.length)]
+  }
+
+  const nextRound = () => {
+    setItem(items[Math.floor(Math.random() * items.length)])
+  }
 
   useEffect(() => {
-  const speakLines = async () => {
-    await speak('Is it fast or slow?')
-    await speak('Là nhanh hay chậm?', 'vi-VN')
-  }
-  speakLines()
-}, [item])
+    speakLocalized({
+      text: {
+        en: 'Is it fast or slow?',
+        vi: 'Là nhanh hay chậm?',
+        zh: '这是快还是慢？',
+      },
+      languageMode,
+    })
+  }, [item])
 
- const nextRound = () => {
-  setItem(randomItem(items))
-}
-  
-  const praises = ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!']
-  const randomPraise = () => praises[Math.floor(Math.random() * praises.length)]
-  const praisesVN = ['Làm tốt lắm!', 'Tuyệt vời!', 'Thật tuyệt diệu!', 'Đỉnh quá!', 'Hoan hô!']
-  const randomPraiseVN = () => praisesVN[Math.floor(Math.random() * praisesVN.length)]
+  const handleAnswer = async (answer: string) => {
+    if (isLocked || disableUI) return
 
-
-  const handleAnswer = async (
-    answer: string
-  ) => {
-	  if (isLocked) return
     if (answer === item.name) {
-	  playCorrect()
-	  setIsLocked(true)
+      playCorrect()
+      setIsLocked(true)
+
+      if (streak === 2) speakLocalized({ text: uiText.streakSpeech.streak2, languageMode })
+      if (streak === 4) speakLocalized({ text: uiText.streakSpeech.streak4, languageMode })
+      if (streak === 9) speakLocalized({ text: uiText.streakSpeech.streak9, languageMode })
+
       addStar()
+      const newScore = score + 1
+      setScore(newScore)
+      setStreak((prev) => prev + 1)
 
-      const newStreak = streak + 1
-
-	  setStreak(newStreak)
-	    	  const newScore = score + 1
-
-setScore(newScore)
-
-if (newScore >= 5) {
-  completeGame('FastSlowGame')
-}
+      if (newScore >= 5) completeGame('fastslow')
 
       setShowCelebrate(true)
 
-      // Speak English praise
-      await speak(`${randomPraise()} ${item.name}!`)
+      const praiseLang =
+        languageMode === 'vi' || languageMode === 'en-vi'
+          ? 'vi'
+          : languageMode === 'zh' || languageMode === 'en-zh'
+          ? 'zh'
+          : 'en'
 
-      // Speak Vietnamese praise
-      await speak(`${randomPraiseVN()} ${item.vi}!`, 'vi-VN')
+      await speakLocalized({
+        text: {
+          en: `${randomPraise('en')} ${item.name}!`,
+          vi: `${randomPraise('vi')} ${item.vi}!`,
+          zh: `${randomPraise('zh')} ${item.zh}!`,
+        },
+        languageMode,
+      })
 
-      if (streak === 2) {
-  speak('Amazing streak!')
-}
-
-if (streak === 4) {
-  speak('Super learner!')
-}
-
-if (streak === 9) {
-  speak('Wow! Superstar!')
-}
-
-     nextRound()
-
-setTimeout(() => {
-  setShowCelebrate(false)
-
-  setIsLocked(false)
-}, 1200)
+      setTimeout(() => {
+        setShowCelebrate(false)
+        nextRound()
+        setIsLocked(false)
+      }, 1200)
     } else {
-  setIsLocked(true)
       playWrong()
+      setIsLocked(true)
       setStreak(0)
-      await speak('Oops! Try again!')
-      await speak('Ối! Thử lại nhé!', 'vi-VN') 
-	  setIsLocked(false)
+
+      await speakLocalized({
+        text: {
+          en: 'Oops! Try again!',
+          vi: 'Ối! Thử lại nhé!',
+          zh: '再试一次！',
+        },
+        languageMode,
+      })
+
+      setTimeout(() => setIsLocked(false), 1200)
     }
+  }
+
+  useEffect(() => {
+    if (resetRef) resetRef.current = resetFastSlowGame
+  }, [])
+
+  const resetFastSlowGame = () => {
+    setScore(0)
+    setStreak(0)
+    setShowCelebrate(false)
+    setIsLocked(false)
+    nextRound()
   }
 
   return (
     <div>
-      	<button onClick={onBack} style={nextButton}>⬅ Back</button>
+      <button onClick={onBack} style={nextButton}>
+        {uiText.back[languageMode]}
+      </button>
 
-      <h2>
-        ⚡🐢 Fast or Slow - Nhanh hay Chậm
-      </h2>
+      <h2>{titles[languageMode]}</h2>
 
-      <h3
-        style={{
-          color: '#ff7b00',
-        }}
-      >
-        ⭐ Score: {score}
+      <h3 style={{ color: '#ff7b00' }}>
+        {uiText.score[languageMode]}: {score}
       </h3>
 
-      <h3>
-        🔥 Streak: {streak}
-      </h3>
+      <h3>{uiText.streak[languageMode]}: {streak}</h3>
 
       {streak >= 3 && (
-        <div
-          style={{
-            fontSize: 32,
-            marginBottom: 20,
-            color: '#ff4757',
-            animation:
-              'pop 0.5s ease',
-          }}
-        >
-          🔥 Amazing Streak!
+        <div style={{ fontSize: 32, marginBottom: 20, color: '#ff4757', animation: 'pop .5s ease' }}>
+          {uiText.streakMessage[languageMode]}
         </div>
       )}
 
       {showCelebrate && (
-        <div
-          style={{
-            fontSize: 60,
-            marginTop: 20,
-            animation:
-              'pop 0.5s ease',
-          }}
-        >
+        <div style={{ fontSize: 60, marginTop: 20, animation: 'pop .5s ease' }}>
           🎉⚡✨
         </div>
       )}
-	  <p
-        style={{
-          fontSize: 28,
-          marginBottom: 30,
-          color: '#555',
-        }}
-      >
-        Is it FAST or SLOW?
-      </p>
+
+      <p style={{ fontSize: 28, marginBottom: 30, color: '#555' }}>
+  {uiText.instruction[languageMode]}
+</p>
+
+
       <div
         style={{
           fontSize: 140,
           marginTop: 30,
           marginBottom: 30,
-          animation:
-            'float 2s ease-in-out infinite',
+          animation: 'float 2s ease-in-out infinite',
         }}
       >
         {item.emoji}
       </div>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: 20,
-          flexWrap: 'wrap',
-        }}
-      >
+
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 20 }}>
         <button
-		disabled={isLocked}
-          onClick={() =>
-            handleAnswer('fast')
-          }
+          disabled={isLocked}
+          onClick={() => handleAnswer('fast')}
           style={{
             fontSize: 28,
             padding: '20px 40px',
             borderRadius: 24,
             border: 'none',
             background: '#55efc4',
-            color: 'black',
             cursor: 'pointer',
           }}
         >
-          ⚡ FAST
+          {uiText.fast[languageMode]}
+
         </button>
 
         <button
-		disabled={isLocked}
-          onClick={() =>
-            handleAnswer('slow')
-          }
+          disabled={isLocked}
+          onClick={() => handleAnswer('slow')}
           style={{
             fontSize: 28,
             padding: '20px 40px',
@@ -264,7 +297,7 @@ setTimeout(() => {
             cursor: 'pointer',
           }}
         >
-          🐢 SLOW
+          {uiText.slow[languageMode]}
         </button>
       </div>
     </div>

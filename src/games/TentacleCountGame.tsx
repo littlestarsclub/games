@@ -1,160 +1,249 @@
 import { useEffect, useState } from 'react'
-import { speak } from '../utils/speak'
 import { playCorrect, playWrong } from '../utils/sounds'
 import { nextButton, speakButton, emojiButton } from '../utils/gameStyles'
 import { useGameLock } from '../utils/useGameLock'
+import { useLanguage } from '../context/LanguageContext'
+import { speakLocalized } from '../utils/speakLocalized'
 
 const easyRange = { min: 1, max: 5 }
 const mediumRange = { min: 1, max: 10 }
 const hardRange = { min: 1, max: 20 }
+
+const titles = {
+  en: '🐙 Tentacle Count',
+  vi: '🐙 Đếm số lượng xúc tu',
+  zh: '🐙 数触手',
+  'en-vi': '🐙 Tentacle Count — Đếm số lượng xúc tu',
+  'en-zh': '🐙 Tentacle Count — 数触手',
+}
+
+const uiText = {
+  back: {
+    en: '⬅ Back',
+    vi: '⬅ Quay lại',
+    zh: '⬅ 返回',
+    'en-vi': '⬅ Back / Quay lại',
+    'en-zh': '⬅ Back / 返回',
+  },
+
+  instruction: {
+    en: 'How many tentacles does the octopus have?',
+    vi: 'Con bạch tuộc có bao nhiêu cái tua?',
+    zh: '章鱼有多少只触手？',
+    'en-vi': 'How many tentacles does the octopus have? / Con bạch tuộc có bao nhiêu cái tua?',
+    'en-zh': 'How many tentacles does the octopus have? / 章鱼有多少只触手？',
+  },
+
+  hearQuestion: {
+    en: '🔊 Hear Question',
+    vi: '🔊 Nghe câu hỏi',
+    zh: '🔊 听问题',
+    'en-vi': '🔊 Hear Question / Nghe câu hỏi',
+    'en-zh': '🔊 Hear Question / 听问题',
+  },
+
+  next: {
+    en: '➡️ Next',
+    vi: '➡️ Tiếp theo',
+    zh: '➡️ 下一题',
+    'en-vi': '➡️ Next / Tiếp theo',
+    'en-zh': '➡️ Next / 下一题',
+  },
+
+  score: {
+    en: '⭐ Score',
+    vi: '⭐ Điểm',
+    zh: '⭐ 分数',
+    'en-vi': '⭐ Score / Điểm',
+    'en-zh': '⭐ Score / 分数',
+  },
+
+  streak: {
+    en: '🔥 Streak',
+    vi: '🔥 Chuỗi đúng',
+    zh: '🔥 连续答对',
+    'en-vi': '🔥 Streak / Chuỗi đúng',
+    'en-zh': '🔥 Streak / 连续答对',
+  },
+
+  streakMessage: {
+    en: '🔥 Amazing Streak!',
+    vi: '🔥 Chuỗi đúng tuyệt vời!',
+    zh: '🔥 惊人的连胜！',
+    'en-vi': '🔥 Amazing Streak! / Chuỗi đúng tuyệt vời!',
+    'en-zh': '🔥 Amazing Streak! / 惊人的连胜！',
+  },
+
+  streakSpeech: {
+    streak2: { en: 'Amazing streak!', vi: 'Chuỗi đúng tuyệt vời!', zh: '惊人的连胜！' },
+    streak4: { en: 'Super learner!', vi: 'Siêu học sinh!', zh: '超级学习者！' },
+    streak9: { en: 'WOW! Superstar!', vi: 'WOW! Siêu sao!', zh: '哇！超级明星！' },
+  },
+
+  praise: {
+    en: ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!'],
+    vi: ['Làm tốt lắm!', 'Tuyệt vời!', 'Thật tuyệt diệu!', 'Đỉnh quá!', 'Hoan hô!'],
+    zh: ['太棒了！', '太精彩了！', '干得好！', '厉害！', '耶！'],
+  },
+}
 
 export default function TentacleCountGame({
   onBack,
   addStar,
   difficulty,
   completeGame,
-}: {
-  onBack: () => void
-  addStar: () => void
-  difficulty: string
-  completeGame: (
-    gameName: string
-  ) => void
+  resetRef,
 }) {
-const range =
-  difficulty === 'easy'
-    ? easyRange
-    : difficulty === 'medium'
-    ? mediumRange
-    : hardRange
+  const range =
+    difficulty === 'easy'
+      ? easyRange
+      : difficulty === 'medium'
+      ? mediumRange
+      : hardRange
 
   const [tentacles, setTentacles] = useState(1)
   const [choices, setChoices] = useState<number[]>([])
   const [score, setScore] = useState(0)
+  const [streak, setStreak] = useState(0)
   const [showCelebrate, setShowCelebrate] = useState(false)
-  const [streak, setStreak] =  useState(0)
- 	const {isLocked, setIsLocked, isSpeaking, disableUI, } = useGameLock()
-  
+
+  const { isLocked, setIsLocked, disableUI, isSpeaking } = useGameLock()
+  const { languageMode } = useLanguage()
 
   useEffect(() => {
     nextRound()
   }, [difficulty])
 
   const nextRound = () => {
-	  if (disableUI) return
-  // Pick a random tentacle count based on difficulty
-  const newCount =
-    Math.floor(Math.random() * (range.max - range.min + 1)) + range.min
+    if (disableUI) return
 
-  setTentacles(newCount)
-
-  // Generate 4 wrong answers
-  const wrong = new Set<number>()
-  while (wrong.size < 4) {
-    const n =
+    const newCount =
       Math.floor(Math.random() * (range.max - range.min + 1)) + range.min
-    if (n !== newCount) wrong.add(n)
+
+    setTentacles(newCount)
+
+    const wrong = new Set<number>()
+    while (wrong.size < 4) {
+      const n =
+        Math.floor(Math.random() * (range.max - range.min + 1)) + range.min
+      if (n !== newCount) wrong.add(n)
+    }
+
+    setChoices([...wrong, newCount].sort(() => Math.random() - 0.5))
   }
 
-  // Combine and shuffle
-  const allChoices = [...wrong, newCount].sort(() => Math.random() - 0.5)
-  setChoices(allChoices)
-}
-
-
-  const speakQuestion = async () => {
-	  if (disableUI) return
-    await speak(`How many tentacles does the octopus have?`)
-    await speak(`Con bạch tuộc có bao nhiêu cái tua?`, 'vi-VN')
-
+  const randomPraise = (lang) => {
+    const arr = uiText.praise[lang]
+    return arr[Math.floor(Math.random() * arr.length)]
   }
 
-  const praises = ['Great job!', 'Amazing!', 'Wonderful!', 'Awesome!', 'Yay!']
-  const randomPraise = () => praises[Math.floor(Math.random() * praises.length)]
-  const praisesVN = ['Làm tốt lắm!', 'Tuyệt vời!', 'Thật tuyệt diệu!', 'Đỉnh quá!', 'Hoan hô!']
-  const randomPraiseVN = () => praisesVN[Math.floor(Math.random() * praisesVN.length)]
- 
   const handleClick = async (choice: number) => {
-	  if (disableUI) return
+    if (disableUI || isLocked) return
+
     if (choice === tentacles) {
       playCorrect()
-	  setIsLocked(true)
-	  if (streak === 2) {speak('Amazing streak!')}
-	  if (streak === 4) {speak('Super learner!')}
-	  if (streak === 9) {speak('WOW! Superstar!')}
+      setIsLocked(true)
+
+      if (streak === 2) speakLocalized({ text: uiText.streakSpeech.streak2, languageMode })
+      if (streak === 4) speakLocalized({ text: uiText.streakSpeech.streak4, languageMode })
+      if (streak === 9) speakLocalized({ text: uiText.streakSpeech.streak9, languageMode })
+
       addStar()
-	  setStreak((prev) => prev + 1)
-	  const newScore = score + 1
+      const newScore = score + 1
+      setScore(newScore)
+      setStreak((prev) => prev + 1)
 
-setScore(newScore)
+      if (newScore >= 5) completeGame('tentaclecount')
 
-if (newScore >= 5) {
-  completeGame('TentacleCountGame')
-}
       setShowCelebrate(true)
 
-     // Speak English praise
-      await speak(`${randomPraise()} ${choice}!`)
+      const praiseLang =
+        languageMode === 'vi' || languageMode === 'en-vi'
+          ? 'vi'
+          : languageMode === 'zh' || languageMode === 'en-zh'
+          ? 'zh'
+          : 'en'
 
-      // Speak Vietnamese praise
-      await speak(`${randomPraiseVN()} ${choice}!`, 'vi-VN')
+      await speakLocalized({
+        text: {
+          en: `${randomPraise('en')} ${choice}!`,
+          vi: `${randomPraise('vi')} ${choice}!`,
+          zh: `${randomPraise('zh')} ${choice}!`,
+        },
+        languageMode,
+      })
 
       setTimeout(() => {
-  setShowCelebrate(false)
-
-  nextRound()
-
-  setIsLocked(false)
-}, 2000)
+        setShowCelebrate(false)
+        nextRound()
+        setIsLocked(false)
+      }, 2000)
     } else {
-  setIsLocked(true)
       playWrong()
-	  setStreak(0)
-      await speak('Try again!')
-      await speak('Thử lại nhé!', 'vi-VN') 
-	  setIsLocked(false)
+      setIsLocked(true)
+      setStreak(0)
+
+      await speakLocalized({
+        text: {
+          en: 'Try again!',
+          vi: 'Thử lại nhé!',
+          zh: '再试一次！',
+        },
+        languageMode,
+      })
+
+      setTimeout(() => setIsLocked(false), 1200)
     }
+  }
+
+  const speakQuestion = async () => {
+    if (disableUI) return
+
+    await speakLocalized({
+      text: uiText.instruction,
+      languageMode,
+    })
+  }
+
+  useEffect(() => {
+    if (resetRef) resetRef.current = resetTentacleGame
+  }, [])
+
+  const resetTentacleGame = () => {
+    setScore(0)
+    setStreak(0)
+    setShowCelebrate(false)
+    nextRound()
   }
 
   return (
     <>
-      <button onClick={onBack} style={nextButton}>⬅ Back</button>
+      <button onClick={onBack} style={nextButton}>
+        {uiText.back[languageMode]}
+      </button>
 
-      <h2>🐙 Tentacle Count - Đếm số lượng xúc tu</h2>
+      <h2>{titles[languageMode]}</h2>
 
       <h2 style={{ color: '#0099ff', marginTop: 10 }}>
-        ⭐ Score: {score}
+        {uiText.score[languageMode]}: {score}
       </h2>
-		<h3>
-  🔥 Streak: {streak}
-</h3>
-{streak >= 3 && (
-  <div
-    style={{
-      fontSize: 32,
-      marginBottom: 20,
-      color: '#ff4757',
-      animation:
-        'pop 0.5s ease',
-    }}
-  >
-    🔥 Amazing Streak!
-  </div>
-)}
+
+      <h3>{uiText.streak[languageMode]}: {streak}</h3>
+
+      {streak >= 3 && (
+        <div style={{ fontSize: 32, marginBottom: 20, color: '#ff4757', animation: 'pop .5s ease' }}>
+          {uiText.streakMessage[languageMode]}
+        </div>
+      )}
+
       {showCelebrate && (
-        <div
-          style={{
-            fontSize: 60,
-            marginTop: 20,
-            animation: 'pop 0.6s ease',
-          }}
-        >
+        <div style={{ fontSize: 60, marginTop: 20, animation: 'pop .6s ease' }}>
           🌊🐙⭐
         </div>
       )}
 
       <p style={{ fontSize: 22, marginTop: 20 }}>
-        Count the tentacles:
+        {uiText.instruction[languageMode]}
       </p>
 
       <div
@@ -164,7 +253,6 @@ if (newScore >= 5) {
           lineHeight: '90px',
         }}
       >
-        {/* Show one octopus emoji per tentacle */}
         {Array.from({ length: tentacles }).map((_, i) => (
           <span key={i}>🐙</span>
         ))}
@@ -182,7 +270,7 @@ if (newScore >= 5) {
         {choices.map((c, i) => (
           <button
             key={i}
-			disabled={isLocked}
+            disabled={isLocked}
             onClick={() => handleClick(c)}
             style={{
               ...emojiButton,
@@ -195,18 +283,20 @@ if (newScore >= 5) {
         ))}
       </div>
 
-      <button disabled={disableUI} onClick={speakQuestion}  style={{
-    ...speakButton,
-    opacity: disableUI ? 0.5 : 1
-  }}>
-        🔊 Hear Question
+      <button
+        disabled={disableUI}
+        onClick={speakQuestion}
+        style={{ ...speakButton, opacity: disableUI ? 0.5 : 1 }}
+      >
+        {uiText.hearQuestion[languageMode]}
       </button>
 
-      <button disabled={isLocked || isSpeaking} onClick={nextRound} style={{
-    ...nextButton,
-    opacity: disableUI ? 0.5 : 1
-  }}>
-        ➡️ Next
+      <button
+        disabled={isLocked || isSpeaking}
+        onClick={nextRound}
+        style={{ ...nextButton, opacity: disableUI ? 0.5 : 1 }}
+      >
+        {uiText.next[languageMode]}
       </button>
     </>
   )
